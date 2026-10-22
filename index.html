@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raise You Up! - Lecteur Multipiste</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --accent: #38bdf8;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+    }
+    .container {
+      width: 100%;
+      max-width: 800px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .header-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    select {
+      background: #131b2e;
+      color: #ffffff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      cursor: pointer;
+    }
+    select option {
+      background-color: #131b2e;
+      color: #ffffff;
+    }
+    .global-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .play-btn {
+      background: var(--accent);
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      color: var(--bg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .time-display {
+      font-family: monospace;
+      color: var(--accent);
+    }
+    .seek-bar {
+      flex: 1;
+      accent-color: var(--accent);
+    }
+    .track-row {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .track-name {
+      width: 140px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .track-controls {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-toggle {
+      background: rgba(255,255,255,0.1);
+      border: none;
+      color: var(--text-muted);
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .btn-toggle.active-solo { background: #eab308; color: #000; }
+    .btn-toggle.active-mute { background: #ef4444; color: #fff; }
+    .vol-slider { flex: 1; accent-color: var(--accent); }
+    #lock-screen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    #lock-screen input {
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--text-muted);
+      margin-top: 10px;
+      font-size: 1rem;
+      text-align: center;
+    }
+    #lock-screen button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      border-radius: 6px;
+      border: none;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="lock-screen">
+  <h2>Raise You Up! - Espace Membres</h2>
+  <p>Veuillez entrer le mot de passe d'accès :</p>
+  <input type="password" id="pass-input" placeholder="Mot de passe">
+  <button onclick="checkPassword()">Valider</button>
+  <p id="pass-error" style="color: #ef4444; display: none; margin-top: 10px;">Mot de passe incorrect</p>
+</div>
+
+<div class="container">
+  <div class="card header-card">
+    <h1>🎛️ Raise You Up!</h1>
+    <select id="project-select" onchange="selectProject()">
+      <option value="">-- Chargement... --</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div id="status-text" style="color: var(--text-muted); font-size: 0.9rem;">Sélectionnez un morceau</div>
+    <div class="global-controls">
+      <button class="play-btn" id="play-btn" onclick="togglePlay()" disabled>
+        <svg id="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+      </button>
+      <span class="time-display" id="time-display">00:00 / 00:00</span>
+      <input type="range" class="seek-bar" id="seek-bar" value="0" min="0" max="100" oninput="seek(this.value)" disabled>
+    </div>
+  </div>
+
+  <div class="card" id="tracks-container" style="display: none;"></div>
+</div>
+
+<script>
+  // Modifier le mot de passe ici si besoin (ex: "ryu2026")
+  const CORRECT_PASSWORD = "RaiseYouUp!2026"; 
+
+  function checkPassword() {
+    const input = document.getElementById('pass-input').value;
+    if (input === CORRECT_PASSWORD) {
+      document.getElementById('lock-screen').style.display = 'none';
+    } else {
+      document.getElementById('pass-error').style.display = 'block';
+    }
+  }
+
+  let audioCtx, availableProjects = [], currentProject = null, tracks = [];
+  let isPlaying = false, startTime = 0, pauseOffset = 0, animationFrame;
+
+  const select = document.getElementById("project-select");
+  const status = document.getElementById("status-text");
+  const playBtn = document.getElementById("play-btn");
+  const playIcon = document.getElementById("play-icon");
+  const timeDisplay = document.getElementById("time-display");
+  const seekBar = document.getElementById("seek-bar");
+  const tracksContainer = document.getElementById("tracks-container");
+
+  async function loadPlaylist() {
+    try {
+      const res = await fetch('./playlist.json?v=' + new Date().getTime());
+      availableProjects = await res.json();
+      
+      select.innerHTML = '<option value="">-- Choisir un morceau --</option>';
+      availableProjects.forEach((p, idx) => {
+        let opt = document.createElement("option");
+        opt.value = idx;
+        opt.innerText = p.title;
+        select.appendChild(opt);
+      });
+      status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
+    } catch(err) {
+      status.innerText = "Aucun morceau trouvé ou chargement de la liste...";
+    }
+  }
+
+  async function selectProject() {
+    stop();
+    const idx = select.value;
+    if (idx === "") {
+      tracksContainer.style.display = "none";
+      playBtn.disabled = true;
+      seekBar.disabled = true;
+      return;
+    }
+    
+    currentProject = availableProjects[idx];
+    status.innerText = `Chargement des pistes pour "${currentProject.title}"...`;
+    playBtn.disabled = true;
+    seekBar.disabled = true;
+    tracksContainer.innerHTML = "";
+
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    tracks = [];
+    let loadedCount = 0;
+
+    for (let trackName of currentProject.tracks) {
+      const trackObj = {
+        name: trackName.replace(/\.[^/.]+$/, ""),
+        url: `${currentProject.folder}/${trackName}`,
+        buffer: null, source: null, gainNode: audioCtx.createGain(),
+        volume: 1, isMuted: false, isSolo: false
+      };
+
+      fetch(trackObj.url)
+        .then(r => r.arrayBuffer())
+        .then(b => audioCtx.decodeAudioData(b))
+        .then(audioBuffer => {
+          trackObj.buffer = audioBuffer;
+          loadedCount++;
+          if (loadedCount === currentProject.tracks.length) {
+            onProjectReady();
+          }
+        });
+
+      tracks.push(trackObj);
+    }
+  }
+
+  function onProjectReady() {
+    status.innerText = `Prêt : ${currentProject.title}`;
+    playBtn.disabled = false;
+    seekBar.disabled = false;
+    tracksContainer.style.display = "block";
+    renderTracksUI();
+  }
+
+  function renderTracksUI() {
+    tracksContainer.innerHTML = "";
+    tracks.forEach((t, i) => {
+      const row = document.createElement("div");
+      row.className = "track-row";
+      row.innerHTML = `
+        <div class="track-name" title="${t.name}">${t.name}</div>
+        <div class="track-controls">
+          <button class="btn-toggle ${t.isSolo ? 'active-solo' : ''}" onclick="toggleSolo(${i})">S</button>
+          <button class="btn-toggle ${t.isMuted ? 'active-mute' : ''}" onclick="toggleMute(${i})">M</button>
+        </div>
+        <input type="range" class="vol-slider" min="0" max="1" step="0.01" value="${t.volume}" oninput="setVolume(${i}, this.value)">
+      `;
+      tracksContainer.appendChild(row);
+    });
+  }
+
+  function updateGains() {
+    const hasSolo = tracks.some(t => t.isSolo);
+    tracks.forEach(t => {
+      if (!t.gainNode) return;
+      if (hasSolo) {
+        t.gainNode.gain.value = t.isSolo ? t.volume : 0;
+      } else {
+        t.gainNode.gain.value = t.isMuted ? 0 : t.volume;
+      }
+    });
+  }
+
+  function toggleSolo(i) { tracks[i].isSolo = !tracks[i].isSolo; updateGains(); renderTracksUI(); }
+  function toggleMute(i) { tracks[i].isMuted = !tracks[i].isMuted; updateGains(); renderTracksUI(); }
+  function setVolume(i, val) { tracks[i].volume = parseFloat(val); updateGains(); }
+
+  function togglePlay() {
+    if (isPlaying) pause(); else play();
+  }
+
+  function play() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    startTime = audioCtx.currentTime - pauseOffset;
+    tracks.forEach(t => {
+      t.source = audioCtx.createBufferSource();
+      t.source.buffer = t.buffer;
+      t.source.connect(t.gainNode);
+      t.gainNode.connect(audioCtx.destination);
+      t.source.start(0, pauseOffset);
+    });
+    updateGains();
+    isPlaying = true;
+    playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
+    updateProgress();
+  }
+
+  function pause() {
+    if (!isPlaying) return;
+    tracks.forEach(t => { if (t.source) t.source.stop(); });
+    pauseOffset = audioCtx.currentTime - startTime;
+    isPlaying = false;
+    playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
+    cancelAnimationFrame(animationFrame);
+  }
+
+  function stop() {
+    pause();
+    pauseOffset = 0;
+    updateUI();
+  }
+
+  function seek(val) {
+    const duration = tracks[0]?.buffer?.duration || 0;
+    pauseOffset = (val / 100) * duration;
+    if (isPlaying) {
+      tracks.forEach(t => { if (t.source) t.source.stop(); });
+      play();
+    } else {
+      updateUI();
+    }
+  }
+
+  function updateProgress() {
+    if (!isPlaying) return;
+    const duration = tracks[0].buffer.duration;
+    pauseOffset = audioCtx.currentTime - startTime;
+    if (pauseOffset >= duration) {
+      stop();
+      return;
+    }
+    updateUI();
+    animationFrame = requestAnimationFrame(updateProgress);
+  }
+
+  function updateUI() {
+    const duration = tracks[0]?.buffer?.duration || 0;
+    seekBar.value = duration ? (pauseOffset / duration) * 100 : 0;
+    timeDisplay.innerText = `${formatTime(pauseOffset)} / ${formatTime(duration)}`;
+  }
+
+  function formatTime(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  }
+
+  loadPlaylist();
+</script>
+</body>
+</html>
