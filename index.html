@@ -20,7 +20,8 @@
     header { display: flex; justify-content: space-between; align-items: center; }
     h1 { font-size: 1.2rem; }
     select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 1rem; outline: none; cursor: pointer; }
-    select option { background-color: #131b2e; color: #ffffff; }    .player-card { display: flex; flex-direction: column; gap: 15px; }
+    select option { background-color: #131b2e; color: #ffffff; }
+    .player-card { display: flex; flex-direction: column; gap: 15px; }
     .controls-row { display: flex; align-items: center; gap: 20px; }
     .play-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: #000; border: none; font-size: 1.3rem; cursor: pointer; }
     .play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -73,7 +74,7 @@
 
 <script>
   // ==========================================
-  // MODIFIEZ VOTRE MOT DE PASSE ICI :
+  // MOT DE PASSE ACCÈS :
   const CORRECT_PASSWORD = "RaiseYouUp!2026"; 
   // ==========================================
 
@@ -100,18 +101,24 @@
   async function loadPlaylist() {
     try {
       const res = await fetch('./playlist.json?v=' + new Date().getTime());
+      if (!res.ok) throw new Error("Fichier non trouvé");
       availableProjects = await res.json();
       
       select.innerHTML = '<option value="">-- Choisir un morceau --</option>';
-      availableProjects.forEach((p, idx) => {
-        let opt = document.createElement("option");
-        opt.value = idx;
-        opt.innerText = p.title;
-        select.appendChild(opt);
-      });
-      status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
+      if (Array.isArray(availableProjects) && availableProjects.length > 0) {
+        availableProjects.forEach((p, idx) => {
+          let opt = document.createElement("option");
+          opt.value = idx;
+          opt.innerText = p.title;
+          select.appendChild(opt);
+        });
+        status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
+      } else {
+        status.innerText = "Aucun morceau trouvé dans la playlist.";
+      }
     } catch(err) {
-      status.innerText = "Aucun morceau trouvé ou chargement de la liste...";
+      console.error(err);
+      status.innerText = "Erreur de chargement du fichier playlist.json";
     }
   }
 
@@ -163,4 +170,99 @@
       row.className = "track-row";
       row.innerHTML = `
         <div class="track-name">${t.name}</div>
-        <input type="range" min
+        <input type="range" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
+        <div class="btn-group">
+          <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})">PRE</button>
+          <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})">S</button>
+          <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})">M</button>
+        </div>
+      `;
+      listContainer.appendChild(row);
+    });
+
+    status.innerText = "Prêt à la lecture";
+    playBtn.disabled = false;
+  }
+
+  function playAll(offset = 0) {
+    stopAllSources();
+    const startAt = audioCtx.currentTime + 0.05;
+    tracks.forEach(t => {
+      t.gainNode = audioCtx.createGain();
+      t.gainNode.connect(audioCtx.destination);
+      t.source = audioCtx.createBufferSource();
+      t.source.buffer = t.buffer;
+      t.source.connect(t.gainNode);
+      t.source.start(startAt, offset);
+    });
+    startTime = startAt - offset;
+    updateMix();
+    isPlaying = true;
+    playBtn.innerText = "⏸";
+    status.innerText = "Lecture en cours...";
+  }
+
+  function stopAllSources() {
+    tracks.forEach(t => {
+      if (t.source) { try { t.source.stop(); } catch(e){} t.source.disconnect(); t.source = null; }
+    });
+  }
+
+  playBtn.onclick = async () => {
+    if (isPlaying) {
+      pauseOffset = (audioCtx.currentTime - startTime);
+      stopAllSources();
+      isPlaying = false;
+      playBtn.innerText = "▶";
+      status.innerText = "En pause";
+    } else {
+      if (audioCtx.state === 'suspended') await audioCtx.resume();
+      playAll(pauseOffset);
+    }
+  };
+
+  setInterval(() => {
+    if (isPlaying && duration > 0) {
+      const cur = Math.min(duration, audioCtx.currentTime - startTime);
+      document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
+      document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
+      if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; }
+    }
+  }, 100);
+
+  document.getElementById("timeline").onclick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const targetTime = ((e.clientX - rect.left) / rect.width) * duration;
+    pauseOffset = targetTime;
+    if (isPlaying) playAll(targetTime);
+    else {
+      document.getElementById("progress").style.width = `${(targetTime / duration) * 100}%`;
+      document.getElementById("timeDisplay").innerText = `${formatTime(targetTime)} / ${formatTime(duration)}`;
+    }
+  };
+
+  function setVolume(i, v) { tracks[i].baseVol = parseFloat(v); updateMix(); }
+  function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
+  function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
+  function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
+
+  function updateMix() {
+    const hasSolo = tracks.some(t => t.solo);
+    const hasPre = tracks.some(t => t.pre);
+    tracks.forEach(t => {
+      if (!t.gainNode) return;
+      let v = t.baseVol;
+      if (t.mute) v = 0;
+      else if (hasSolo) v = t.solo ? t.baseVol : 0;
+      else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
+      t.gainNode.gain.setTargetAtTime(Math.max(0, Math.min(1, v)), audioCtx.currentTime, 0.01);
+    });
+  }
+
+  function formatTime(s) {
+    const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+</script>
+</body>
+</html>
