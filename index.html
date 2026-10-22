@@ -3,204 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Raise You Up! - Lecteur Multipiste</title>
+  <title>Lecteur Multipiste - Raise You Up!</title>
   <style>
-    :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
-      --accent: #38bdf8;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-    }
-    .container {
-      width: 100%;
-      max-width: 800px;
-    }
-    h1 {
-      font-size: 1.5rem;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .card {
-      background: var(--card-bg);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-    }
-    .header-card {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-    select {
-      background: #131b2e;
-      color: #ffffff;
-      border: 1px solid rgba(255,255,255,0.2);
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-size: 1rem;
-      outline: none;
-      cursor: pointer;
-    }
-    select option {
-      background-color: #131b2e;
-      color: #ffffff;
-    }
-    .global-controls {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      margin-top: 15px;
-    }
-    .play-btn {
-      background: var(--accent);
-      border: none;
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      color: var(--bg);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .time-display {
-      font-family: monospace;
-      color: var(--accent);
-    }
-    .seek-bar {
-      flex: 1;
-      accent-color: var(--accent);
-    }
-    .track-row {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      padding: 12px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-    .track-name {
-      width: 140px;
-      font-weight: 500;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .track-controls {
-      display: flex;
-      gap: 8px;
-    }
-    .btn-toggle {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: var(--text-muted);
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.8rem;
-      font-weight: bold;
-    }
-    .btn-toggle.active-solo { background: #eab308; color: #000; }
-    .btn-toggle.active-mute { background: #ef4444; color: #fff; }
-    .vol-slider { flex: 1; accent-color: var(--accent); }
-    #lock-screen {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: var(--bg);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    #lock-screen input {
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--text-muted);
-      margin-top: 10px;
-      font-size: 1rem;
-      text-align: center;
-    }
-    #lock-screen button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      border-radius: 6px;
-      border: none;
-      background: var(--accent);
-      color: var(--bg);
-      font-weight: bold;
-      cursor: pointer;
-    }
+    :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+    
+    #auth-screen { position: fixed; inset: 0; background: var(--bg); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+    .auth-card { background: var(--card); padding: 30px; border-radius: 16px; display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 350px; text-align: center; }
+    .auth-card input { background: rgba(255,255,255,0.05); color: var(--text); border: 1px solid rgba(255,255,255,0.1); padding: 12px; border-radius: 8px; font-size: 1rem; outline: none; text-align: center; }
+    .auth-card button { background: var(--primary); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    #auth-error { color: var(--accent); font-size: 0.85rem; display: none; }
+
+    .container { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 20px; display: none; }
+    header, .player-card, .track-row { background: var(--card); border-radius: 12px; padding: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 1.2rem; }
+    select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 1rem; outline: none; cursor: pointer; }
+    select option { background-color: #131b2e; color: #ffffff; }
+    .player-card { display: flex; flex-direction: column; gap: 15px; }
+    .controls-row { display: flex; align-items: center; gap: 20px; }
+    .play-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: #000; border: none; font-size: 1.3rem; cursor: pointer; }
+    .play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .time-display { font-family: monospace; color: var(--primary); min-width: 110px; text-align: center; }
+    .timeline { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; cursor: pointer; }
+    .timeline-progress { height: 100%; background: var(--primary); border-radius: 4px; width: 0%; }
+    .tracks-list { display: flex; flex-direction: column; gap: 10px; }
+    .track-row { display: flex; align-items: center; gap: 15px; padding: 14px 20px; }
+    .track-name { width: 120px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    input[type=range] { -webkit-appearance: none; flex: 1; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+    .btn-group { display: flex; gap: 5px; }
+    .btn-track { padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-track.active-pre { background: var(--primary); color: #000; }
+    .btn-track.active-solo { background: #eccc68; color: #000; }
+    .btn-track.active-mute { background: var(--accent); color: #fff; }
   </style>
 </head>
 <body>
 
-<div id="lock-screen">
-  <h2>Morceaux Raise You Up!</h2>
-  <p>Veuillez entrer le mot de passe d'accès :</p>
-  <input type="password" id="pass-input" placeholder="Mot de passe">
-  <button onclick="checkPassword()">Valider</button>
-  <p id="pass-error" style="color: #ef4444; display: none; margin-top: 10px;">Mot de passe incorrect</p>
+<div id="auth-screen">
+  <div class="auth-card">
+    <h2>🔐 Espace Protégé</h2>
+    <p style="font-size:0.85rem; color:var(--text-dim);">Entrez le mot de passe de Raise You Up!</p>
+    <input type="password" id="passwordInput" placeholder="Mot de passe" autofocus>
+    <button onclick="checkPassword()">Entrer</button>
+    <div id="auth-error">Mot de passe incorrect</div>
+  </div>
 </div>
 
-<div class="container">
-  <div class="card header-card">
+<div class="container" id="mainApp">
+  <header>
     <h1>🎛️ Morceaux Raise You Up!</h1>
-    <select id="project-select" onchange="selectProject()">
-      <option value="">-- Chargement... --</option>
+    <select id="projectSelect" onchange="switchProject(this.value)">
+      <option value="">-- Choisir un morceau --</option>
     </select>
-  </div>
-
-  <div class="card">
-    <div id="status-text" style="color: var(--text-muted); font-size: 0.9rem;">Sélectionnez un morceau</div>
-    <div class="global-controls">
-      <button class="play-btn" id="play-btn" onclick="togglePlay()" disabled>
-        <svg id="play-icon" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-      </button>
-      <span class="time-display" id="time-display">00:00 / 00:00</span>
-      <input type="range" class="seek-bar" id="seek-bar" value="0" min="0" max="100" oninput="seek(this.value)" disabled>
+  </header>
+  <div class="player-card">
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste...</div>
+    <div class="controls-row">
+      <button class="play-btn" id="playBtn" disabled>▶</button>
+      <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
+      <div class="timeline" id="timeline">
+        <div class="timeline-progress" id="progress"></div>
+      </div>
     </div>
   </div>
-
-  <div class="card" id="tracks-container" style="display: none;"></div>
+  <div class="tracks-list" id="tracksList"></div>
 </div>
 
 <script>
+  // ==========================================
+  // MODIFIEZ VOTRE MOT DE PASSE ICI :
   const CORRECT_PASSWORD = "RaiseYouUp!2026"; 
+  // ==========================================
 
   function checkPassword() {
-    const input = document.getElementById('pass-input').value;
+    const input = document.getElementById("passwordInput").value;
     if (input === CORRECT_PASSWORD) {
-      document.getElementById('lock-screen').style.display = 'none';
+      document.getElementById("auth-screen").style.display = "none";
+      document.getElementById("mainApp").style.display = "flex";
+      loadPlaylist();
     } else {
-      document.getElementById('pass-error').style.display = 'block';
+      document.getElementById("auth-error").style.display = "block";
     }
   }
 
-  let audioCtx, availableProjects = [], currentProject = null, tracks = [];
-  let isPlaying = false, startTime = 0, pauseOffset = 0, animationFrame;
+  document.getElementById("passwordInput").addEventListener("keypress", function(e) {
+    if (e.key === 'Enter') checkPassword();
+  });
 
-  const select = document.getElementById("project-select");
-  const status = document.getElementById("status-text");
-  const playBtn = document.getElementById("play-btn");
-  const playIcon = document.getElementById("play-icon");
-  const timeDisplay = document.getElementById("time-display");
-  const seekBar = document.getElementById("seek-bar");
-  const tracksContainer = document.getElementById("tracks-container");
+  let availableProjects = [];
+  const select = document.getElementById("projectSelect");
+  const playBtn = document.getElementById("playBtn");
+  const status = document.getElementById("status");
 
   async function loadPlaylist() {
     try {
@@ -220,46 +116,30 @@
     }
   }
 
-  async function selectProject() {
-    stop();
-    const idx = select.value;
-    if (idx === "") {
-      tracksContainer.style.display = "none";
-      playBtn.disabled = true;
-      seekBar.disabled = true;
-      return;
-    }
-    
-    currentProject = availableProjects[idx];
-    status.innerText = `Chargement des pistes pour "${currentProject.title}"...`;
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  let audioCtx = null;
+  let tracks = [], isPlaying = false, startTime = 0, pauseOffset = 0, duration = 0;
+
+  async function switchProject(idx) {
+    if (idx === "") return;
+    stopAllSources();
+    isPlaying = false;
+    pauseOffset = 0;
+    playBtn.innerText = "▶";
     playBtn.disabled = true;
-    seekBar.disabled = true;
-    tracksContainer.innerHTML = "";
+    document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
+    document.getElementById("progress").style.width = "0%";
+    
+    const proj = availableProjects[idx];
+    status.innerText = "Chargement des pistes...";
 
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
+    if (!audioCtx) audioCtx = new AudioContext();
     tracks = [];
-    let loadedCount = 0;
+    const listContainer = document.getElementById("tracksList");
+    listContainer.innerHTML = "";
 
-    for (let trackName of currentProject.tracks) {
-      const trackObj = {
-        name: trackName.replace(/\.[^/.]+$/, ""),
-        url: `${currentProject.folder}/${trackName}`,
-        buffer: null, source: null, gainNode: audioCtx.createGain(),
-        volume: 1, isMuted: false, isSolo: false
-      };
+    duration = 0;
+    let loaded = 0;
 
-      fetch(trackObj.url)
-        .then(r => r.arrayBuffer())
-        .then(b => audioCtx.decodeAudioData(b))
-        .then(audioBuffer => {
-          trackObj.buffer = audioBuffer;
-          loadedCount++;
-          if (loadedCount === currentProject.tracks.length) {
-            onProjectReady();
-          }
-        });
-
-      tracks.push(trackObj);
-    }
-  }
+    for (let i = 0; i < proj.tracks.length; i++) {
+      const trackName =
