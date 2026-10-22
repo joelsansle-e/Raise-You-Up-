@@ -20,8 +20,7 @@
     header { display: flex; justify-content: space-between; align-items: center; }
     h1 { font-size: 1.2rem; }
     select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 1rem; outline: none; cursor: pointer; }
-    select option { background-color: #131b2e; color: #ffffff; }
-    .player-card { display: flex; flex-direction: column; gap: 15px; }
+    select option { background-color: #131b2e; color: #ffffff; }    .player-card { display: flex; flex-direction: column; gap: 15px; }
     .controls-row { display: flex; align-items: center; gap: 20px; }
     .play-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: #000; border: none; font-size: 1.3rem; cursor: pointer; }
     .play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
@@ -142,4 +141,26 @@
     let loaded = 0;
 
     for (let i = 0; i < proj.tracks.length; i++) {
-      const trackName =
+      const trackName = proj.tracks[i].replace(/\.[^/.]+$/, "");
+      const url = `${proj.folder}/${proj.tracks[i]}`;
+      
+      try {
+        const res = await fetch(url);
+        const buf = await res.arrayBuffer();
+        const decoded = await audioCtx.decodeAudioData(buf);
+        if (decoded.duration > duration) duration = decoded.duration;
+
+        tracks.push({ name: trackName, buffer: decoded, baseVol: 1, pre: false, solo: false, mute: false, source: null, gainNode: null });
+        loaded++;
+        status.innerText = `Chargement (${loaded}/${proj.tracks.length})...`;
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    tracks.forEach((t, i) => {
+      const row = document.createElement("div");
+      row.className = "track-row";
+      row.innerHTML = `
+        <div class="track-name">${t.name}</div>
+        <input type="range" min
