@@ -1,0 +1,50 @@
+name: Generate Playlist
+
+on:
+  push:
+    paths-ignore:
+      - 'playlist.json'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Generate playlist.json
+        run: |
+          node -e '
+          const fs = require("fs");
+          const path = require(".");
+          
+          const items = fs.readdirSync(path);
+          const playlist = [];
+
+          items.forEach(item => {
+            if (fs.statSync(item).isDirectory() && !item.startsWith(".")) {
+              const files = fs.readdirSync(item);
+              const audioFiles = files.filter(f => f.endsWith(".mp3") || f.endsWith(".wav"));
+              if (audioFiles.length > 0) {
+                playlist.push({
+                  title: item,
+                  folder: item,
+                  tracks: audioFiles
+                });
+              }
+            }
+          });
+
+          fs.writeFileSync("playlist.json", JSON.stringify(playlist, null, 2));
+          '
+
+      - name: Commit and push playlist.json
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add playlist.json
+          git commit -m "Auto-update playlist.json" || exit 0
+          git push
