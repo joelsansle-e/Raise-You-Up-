@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "title": "CCNK",
+    "folder": "CCNK",
+    "tracks": [
+      "CCNK_Basse.mp3",
+      "CCNK_Piano.mp3",
+      "CCNK_Rhodes.mp3"
+    ]
+  }
+]
