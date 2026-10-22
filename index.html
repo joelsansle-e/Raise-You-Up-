@@ -150,7 +150,7 @@
 <body>
 
 <div id="lock-screen">
-  <h2>Raise You Up! - Espace Membres</h2>
+  <h2>Morceaux Raise You Up!</h2>
   <p>Veuillez entrer le mot de passe d'accès :</p>
   <input type="password" id="pass-input" placeholder="Mot de passe">
   <button onclick="checkPassword()">Valider</button>
@@ -159,7 +159,7 @@
 
 <div class="container">
   <div class="card header-card">
-    <h1>🎛️ Raise You Up!</h1>
+    <h1>🎛️ Morceaux Raise You Up!</h1>
     <select id="project-select" onchange="selectProject()">
       <option value="">-- Chargement... --</option>
     </select>
@@ -180,7 +180,6 @@
 </div>
 
 <script>
-  // Modifier le mot de passe ici si besoin (ex: "ryu2026")
   const CORRECT_PASSWORD = "RaiseYouUp!2026"; 
 
   function checkPassword() {
@@ -264,119 +263,3 @@
       tracks.push(trackObj);
     }
   }
-
-  function onProjectReady() {
-    status.innerText = `Prêt : ${currentProject.title}`;
-    playBtn.disabled = false;
-    seekBar.disabled = false;
-    tracksContainer.style.display = "block";
-    renderTracksUI();
-  }
-
-  function renderTracksUI() {
-    tracksContainer.innerHTML = "";
-    tracks.forEach((t, i) => {
-      const row = document.createElement("div");
-      row.className = "track-row";
-      row.innerHTML = `
-        <div class="track-name" title="${t.name}">${t.name}</div>
-        <div class="track-controls">
-          <button class="btn-toggle ${t.isSolo ? 'active-solo' : ''}" onclick="toggleSolo(${i})">S</button>
-          <button class="btn-toggle ${t.isMuted ? 'active-mute' : ''}" onclick="toggleMute(${i})">M</button>
-        </div>
-        <input type="range" class="vol-slider" min="0" max="1" step="0.01" value="${t.volume}" oninput="setVolume(${i}, this.value)">
-      `;
-      tracksContainer.appendChild(row);
-    });
-  }
-
-  function updateGains() {
-    const hasSolo = tracks.some(t => t.isSolo);
-    tracks.forEach(t => {
-      if (!t.gainNode) return;
-      if (hasSolo) {
-        t.gainNode.gain.value = t.isSolo ? t.volume : 0;
-      } else {
-        t.gainNode.gain.value = t.isMuted ? 0 : t.volume;
-      }
-    });
-  }
-
-  function toggleSolo(i) { tracks[i].isSolo = !tracks[i].isSolo; updateGains(); renderTracksUI(); }
-  function toggleMute(i) { tracks[i].isMuted = !tracks[i].isMuted; updateGains(); renderTracksUI(); }
-  function setVolume(i, val) { tracks[i].volume = parseFloat(val); updateGains(); }
-
-  function togglePlay() {
-    if (isPlaying) pause(); else play();
-  }
-
-  function play() {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    startTime = audioCtx.currentTime - pauseOffset;
-    tracks.forEach(t => {
-      t.source = audioCtx.createBufferSource();
-      t.source.buffer = t.buffer;
-      t.source.connect(t.gainNode);
-      t.gainNode.connect(audioCtx.destination);
-      t.source.start(0, pauseOffset);
-    });
-    updateGains();
-    isPlaying = true;
-    playIcon.innerHTML = `<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>`;
-    updateProgress();
-  }
-
-  function pause() {
-    if (!isPlaying) return;
-    tracks.forEach(t => { if (t.source) t.source.stop(); });
-    pauseOffset = audioCtx.currentTime - startTime;
-    isPlaying = false;
-    playIcon.innerHTML = `<path d="M8 5v14l11-7z"/>`;
-    cancelAnimationFrame(animationFrame);
-  }
-
-  function stop() {
-    pause();
-    pauseOffset = 0;
-    updateUI();
-  }
-
-  function seek(val) {
-    const duration = tracks[0]?.buffer?.duration || 0;
-    pauseOffset = (val / 100) * duration;
-    if (isPlaying) {
-      tracks.forEach(t => { if (t.source) t.source.stop(); });
-      play();
-    } else {
-      updateUI();
-    }
-  }
-
-  function updateProgress() {
-    if (!isPlaying) return;
-    const duration = tracks[0].buffer.duration;
-    pauseOffset = audioCtx.currentTime - startTime;
-    if (pauseOffset >= duration) {
-      stop();
-      return;
-    }
-    updateUI();
-    animationFrame = requestAnimationFrame(updateProgress);
-  }
-
-  function updateUI() {
-    const duration = tracks[0]?.buffer?.duration || 0;
-    seekBar.value = duration ? (pauseOffset / duration) * 100 : 0;
-    timeDisplay.innerText = `${formatTime(pauseOffset)} / ${formatTime(duration)}`;
-  }
-
-  function formatTime(sec) {
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }
-
-  loadPlaylist();
-</script>
-</body>
-</html>
