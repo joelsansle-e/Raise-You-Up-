@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v14)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v15)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -51,7 +51,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v14</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v15</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -104,7 +104,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste...</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v15)</div>
     <div class="controls-row">
       <button class="play-btn" id="playBtn" disabled>▶</button>
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
@@ -141,7 +141,7 @@
           opt.innerText = p.title || p.name || `Morceau ${idx + 1}`;
           select.appendChild(opt);
         });
-        status.innerText = "Sélectionnez un morceau dans le menu ci-dessus (v14 chargée)";
+        status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
       } else {
         status.innerText = "Aucun morceau trouvé dans la playlist.";
       }
@@ -155,6 +155,7 @@
   let currentPitchSemitones = 0;
   let currentTempoRatio = 1.0;
   let pitchShiftNode = null;
+  let audioCtx = null;
 
   function changePitch(semitones) {
     currentPitchSemitones = parseInt(semitones, 10);
@@ -178,7 +179,7 @@
     document.getElementById("tempoSlider").value = currentTempoRatio;
     document.getElementById("tempoLabel").innerText = `${Math.round(currentTempoRatio * 100)}%`;
     tracks.forEach(t => {
-      if (t.player) t.player.playbackRate = currentTempoRatio;
+      if (t.source) t.source.playbackRate.value = currentTempoRatio;
     });
   }
 
@@ -195,7 +196,14 @@
     document.getElementById("progress").style.width = "0%";
     
     const proj = availableProjects[idx];
-    status.innerText = "Chargement des pistes...";
+    status.innerText = "Chargement des pistes en cours...";
+
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
 
     if (typeof Tone !== 'undefined') {
       await Tone.start();
@@ -209,15 +217,8 @@
     listContainer.innerHTML = "";
 
     duration = 0;
-    const trackListObj = proj.tracks;
-    
-    // Récupération sécurisée de la liste des fichiers selon la structure du JSON
-    let trackFiles = [];
-    if (Array.isArray(trackListObj)) {
-      trackFiles = trackListObj;
-    } else if (trackListObj && typeof trackListObj === 'object') {
-      trackFiles = Object.values(trackListObj);
-    }
+    const trackListObj = proj.tracks || proj.files || [];
+    let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
 
     if (trackFiles.length === 0) {
       status.innerText = "Aucune piste trouvée pour ce morceau.";
@@ -232,37 +233,42 @@
       const url = folder ? `${folder}/${fileName}` : fileName;
 
       try {
-        const player = new Tone.Player();
-        player.playbackRate = currentTempoRatio;
-        await player.load(url);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-        const volumeNode = new Tone.Volume(0);
-        player.connect(volumeNode);
-        if (pitchShiftNode) {
-          volumeNode.connect(pitchShiftNode);
-        } else {
-          volumeNode.toDestination();
-        }
-
-        if (player.buffer.duration > duration) duration = player.buffer.duration;
+        if (audioBuffer.duration > duration) duration = audioBuffer.duration;
         loaded++;
         status.innerText = `Chargement (${loaded}/${trackFiles.length})...`;
 
+        const gainNode = audioCtx.createGain();
+        if (pitchShiftNode) {
+          gainNode.connect(pitchShiftNode);
+        } else {
+          gainNode.connect(audioCtx.destination);
+        }
+
         tracks.push({
           name: trackName,
-          player: player,
-          volumeNode: volumeNode,
+          buffer: audioBuffer,
+          gainNode: gainNode,
           baseVol: 1,
           pre: false,
           solo: false,
-          mute: false
+          mute: false,
+          source: null
         });
       } catch (e) {
         console.error("Erreur chargement piste:", fileName, e);
       }
     }
 
-    // Affichage explicite des pistes dans le DOM
+    if (tracks.length === 0) {
+      status.innerText = "Erreur : impossible de charger les fichiers audio.";
+      return;
+    }
+
     tracks.forEach((t, i) => {
       const row = document.createElement("div");
       row.className = "track-row";
@@ -284,13 +290,23 @@
     playBtn.disabled = false;
   }
 
+  let startTime = 0;
+
   function playAll(offset = 0) {
     stopAllSources();
+    if (!audioCtx) return;
+    
+    const startAt = audioCtx.currentTime + 0.05;
+
     tracks.forEach(t => {
-      if (t.player && t.player.loaded) {
-        t.player.start(Tone.now(), offset);
-      }
+      t.source = audioCtx.createBufferSource();
+      t.source.buffer = t.buffer;
+      t.source.playbackRate.value = currentTempoRatio;
+      t.source.connect(t.gainNode);
+      t.source.start(startAt, offset);
     });
+
+    startTime = startAt - (offset / currentTempoRatio);
     updateMix();
     isPlaying = true;
     playBtn.innerText = "⏸";
@@ -299,19 +315,21 @@
 
   function stopAllSources() {
     tracks.forEach(t => {
-      if (t.player) {
-        try { t.player.stop(); } catch(e){}
+      if (t.source) {
+        try { t.source.stop(); } catch(e){}
+        t.source.disconnect();
+        t.source = null;
       }
     });
   }
 
   playBtn.onclick = async () => {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
     if (typeof Tone !== 'undefined') await Tone.start();
 
     if (isPlaying) {
-      pauseOffset = tracks[0] && tracks[0].player.state === "started" 
-        ? tracks[0].player.toSeconds(Tone.now() - tracks[0].player._startTime) + pauseOffset 
-        : pauseOffset;
+      pauseOffset = (audioCtx.currentTime - startTime) * currentTempoRatio;
       stopAllSources();
       isPlaying = false;
       playBtn.innerText = "▶";
@@ -322,11 +340,17 @@
   };
 
   setInterval(() => {
-    if (isPlaying && duration > 0 && tracks[0] && tracks[0].player && tracks[0].player.state === "started") {
-      const cur = Math.min(duration, tracks[0].player.toSeconds(Tone.now() - tracks[0].player._startTime) + pauseOffset);
+    if (isPlaying && duration > 0 && audioCtx) {
+      const cur = Math.min(duration, (audioCtx.currentTime - startTime) * currentTempoRatio);
       document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
       document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
-      if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; status.innerText = "Terminé"; }
+      if (cur >= duration) { 
+        stopAllSources(); 
+        isPlaying = false; 
+        pauseOffset = 0; 
+        playBtn.innerText = "▶"; 
+        status.innerText = "Terminé"; 
+      }
     }
   }, 100);
 
@@ -350,13 +374,13 @@
     const hasSolo = tracks.some(t => t.solo);
     const hasPre = tracks.some(t => t.pre);
     tracks.forEach(t => {
+      if (!t.gainNode || !audioCtx) return;
       let v = t.baseVol;
       if (t.mute) v = 0;
       else if (hasSolo) v = t.solo ? t.baseVol : 0;
       else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
       
-      const db = v === 0 ? -Infinity : 20 * Math.log10(v);
-      if (t.volumeNode) t.volumeNode.volume.value = db;
+      t.gainNode.gain.setTargetAtTime(Math.max(0, Math.min(1, v)), audioCtx.currentTime, 0.01);
     });
   }
 
