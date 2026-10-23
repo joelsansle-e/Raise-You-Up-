@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v59)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v60)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -53,7 +53,7 @@
       background: #0b0f19;
       color: #fff;
       border: 1px solid rgba(255,255,255,0.2);
-      padding: 12px 40px 12px 12px;
+      padding: 12px 45px 12px 12px;
       border-radius: 8px;
       font-size: 1rem;
       outline: none;
@@ -67,7 +67,9 @@
       border: none;
       color: var(--text-dim);
       cursor: pointer;
-      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       padding: 0;
     }
     .toggle-view:hover { color: var(--primary); }
@@ -159,20 +161,22 @@
 <div id="sysContainer">
   <div class="sys-card">
     <h2>🎤 Raise You Up!</h2>
-    <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer la clé d'initialisation :</p>
+    <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
     <div class="input-wrapper">
-      <input type="password" id="appConfigInput" placeholder="Clé d'accès" autofocus>
-      <button type="button" class="toggle-view" onclick="toggleViewMode()" title="Afficher/Masquer">👁️</button>
+      <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
+      <button type="button" class="toggle-view" onclick="toggleViewMode()" title="Afficher/Masquer">
+        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+      </button>
     </div>
-    <button class="btn-exec" onclick="initSession()">Charger</button>
-    <div id="sysAlert">Clé invalide</div>
+    <button class="btn-exec" onclick="initSession()">Valider</button>
+    <div id="sysAlert">Mot de passe incorrect</div>
   </div>
 </div>
 
 <div id="appContent">
   <header>
     <div class="header-title-row">
-      <h1>🎤 Raise You Up! <span class="version-badge">v59</span></h1>
+      <h1>🎤 Raise You Up! <span class="version-badge">v60</span></h1>
     </div>
 
     <div class="header-controls-row">
@@ -225,7 +229,7 @@
   </header>
 
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v59)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v60)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -239,12 +243,18 @@
 </div>
 
 <script>
-  // Paramètre interne de validation (RaiseYouUp!2026)
   const systemConfig = "RaiseYouUp!2026";
 
   function toggleViewMode() {
     const field = document.getElementById("appConfigInput");
-    field.type = field.type === "password" ? "text" : "password";
+    const icon = document.getElementById("eyeIcon");
+    if (field.type === "password") {
+      field.type = "text";
+      icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+    } else {
+      field.type = "password";
+      icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    }
   }
 
   function initSession() {
@@ -314,8 +324,13 @@
         availableProjects.forEach((p, idx) => {
           let opt = document.createElement("option");
           opt.value = idx;
-          let decodedTitle = decodeBase64(p.title || p.name || p.folder || `Morceau ${idx + 1}`);
-          opt.innerText = decodedTitle;
+          
+          let rawFolder = p.folder || p.path || p.title || p.name || `Morceau ${idx + 1}`;
+          let decodedFolder = decodeBase64(rawFolder);
+          
+          let cleanTitle = decodedFolder.replace(/__(?:Key-)?([A-G][b\#]?m?)/i, "").replace(/_/g, " ").trim();
+          
+          opt.innerText = cleanTitle || decodedFolder;
           select.appendChild(opt);
         });
         status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
