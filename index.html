@@ -15,7 +15,7 @@
     .auth-card button { background: var(--primary); color: #000; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
     #auth-error { color: var(--accent); font-size: 0.85rem; display: none; }
 
-    .container { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 20px; display: none; }
+    .container { width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 20px; display: none; }
     header, .player-card, .track-row { background: var(--card); border-radius: 12px; padding: 20px; }
     header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
     h1 { font-size: 1.2rem; }
@@ -36,8 +36,12 @@
     .timeline { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; cursor: pointer; }
     .timeline-progress { height: 100%; background: var(--primary); border-radius: 4px; width: 0%; }
     .tracks-list { display: flex; flex-direction: column; gap: 10px; }
-    .track-row { display: flex; align-items: center; gap: 15px; padding: 14px 20px; }
-    .track-name { width: 120px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    
+    /* Disposition retravaillée pour les noms longs */
+    .track-row { display: flex; align-items: center; gap: 15px; padding: 14px 20px; flex-wrap: wrap; }
+    .track-name { flex: 1 1 250px; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
+    .track-controls { display: flex; align-items: center; gap: 15px; flex: 2 1 300px; }
+    
     input[type=range] { -webkit-appearance: none; flex: 1; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; }
     .btn-group { display: flex; gap: 5px; }
@@ -64,7 +68,7 @@
     <h1>🎛️ Morceaux Raise You Up!</h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
-      <!-- Tonalité (PitchShift indépendant) -->
+      <!-- Tonalité -->
       <div class="control-group">
         <span>Tonalité :</span>
         <button class="btn-step" onclick="stepPitch(-1)">-</button>
@@ -99,7 +103,7 @@
         <button class="btn-reset" onclick="resetPitch()">RESET</button>
       </div>
 
-      <!-- Tempo (Vitesse indépendante) -->
+      <!-- Tempo -->
       <div class="control-group">
         <span>Tempo :</span>
         <input type="range" id="tempoSlider" min="0.3" max="3.0" step="0.05" value="1.0" oninput="changeTempo(this.value)" style="width: 80px;">
@@ -149,9 +153,8 @@
   const playBtn = document.getElementById("playBtn");
   const status = document.getElementById("status");
 
-  // Chargement différé de Tone.js pour débloquer l'authentification
   function loadToneAndPlaylist() {
-    status.innerText = "Initialisation du moteur audio...";
+    status.innerText = "Initialisation...";
     if (typeof Tone === 'undefined') {
       const script = document.createElement('script');
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js";
@@ -173,4 +176,218 @@
       if (Array.isArray(availableProjects) && availableProjects.length > 0) {
         availableProjects.forEach((p, idx) => {
           let opt = document.createElement("option");
-          opt.
+          opt.value = idx;
+          opt.innerText = p.title;
+          select.appendChild(opt);
+        });
+        status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
+      } else {
+        status.innerText = "Aucun morceau trouvé dans la playlist.";
+      }
+    } catch(err) {
+      console.error(err);
+      status.innerText = "Erreur de chargement du fichier playlist.json";
+    }
+  }
+
+  let tracks = [], isPlaying = false, pauseOffset = 0, duration = 0;
+  let currentPitchSemitones = 0;
+  let currentTempoRatio = 1.0;
+  let pitchShiftNode = null;
+
+  function changePitch(semitones) {
+    currentPitchSemitones = parseInt(semitones, 10);
+    document.getElementById("pitchSelect").value = currentPitchSemitones;
+    if (pitchShiftNode) {
+      pitchShiftNode.pitch = currentPitchSemitones;
+    }
+  }
+
+  function stepPitch(delta) {
+    let newVal = currentPitchSemitones + delta;
+    if (newVal < -12) newVal = -12;
+    if (newVal > 12) newVal = 12;
+    changePitch(newVal);
+  }
+
+  function resetPitch() { changePitch(0); }
+
+  function changeTempo(val) {
+    currentTempoRatio = parseFloat(val);
+    document.getElementById("tempoSlider").value = currentTempoRatio;
+    document.getElementById("tempoLabel").innerText = `${Math.round(currentTempoRatio * 100)}%`;
+    tracks.forEach(t => {
+      if (t.player) t.player.playbackRate = currentTempoRatio;
+    });
+  }
+
+  function resetTempo() { changeTempo(1.0); }
+
+  async function switchProject(idx) {
+    if (idx === "") return;
+    stopAllSources();
+    isPlaying = false;
+    pauseOffset = 0;
+    playBtn.innerText = "▶";
+    playBtn.disabled = true;
+    document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
+    document.getElementById("progress").style.width = "0%";
+    
+    const proj = availableProjects[idx];
+    status.innerText = "Chargement des pistes...";
+
+    if (typeof Tone !== 'undefined') {
+      await Tone.start();
+      if (!pitchShiftNode) {
+        pitchShiftNode = new Tone.PitchShift({ pitch: currentPitchSemitones }).toDestination();
+      }
+    }
+
+    tracks = [];
+    const listContainer = document.getElementById("tracksList");
+    listContainer.innerHTML = "";
+
+    duration = 0;
+    let loaded = 0;
+
+    // Chargement parallèle optimisé
+    const loadPromises = proj.tracks.map(async (fileName) => {
+      const trackName = fileName.replace(/\.[^/.]+$/, "");
+      const url = `${proj.folder}/${fileName}`;
+      try {
+        const buffer = new Tone.ToneAudioBuffer();
+        await buffer.load(url);
+        
+        const player = new Tone.Player(buffer);
+        player.playbackRate = currentTempoRatio;
+
+        const volumeNode = new Tone.Volume(0);
+        player.connect(volumeNode);
+        if (pitchShiftNode) {
+          volumeNode.connect(pitchShiftNode);
+        } else {
+          volumeNode.toDestination();
+        }
+
+        if (buffer.duration > duration) duration = buffer.duration;
+        loaded++;
+        status.innerText = `Chargement (${loaded}/${proj.tracks.length})...`;
+
+        return {
+          name: trackName,
+          player: player,
+          volumeNode: volumeNode,
+          baseVol: 1,
+          pre: false,
+          solo: false,
+          mute: false
+        };
+      } catch (e) {
+        console.error("Erreur chargement piste:", fileName, e);
+        return null;
+      }
+    });
+
+    const loadedTracks = await Promise.all(loadPromises);
+    tracks = loadedTracks.filter(t => t !== null);
+
+    tracks.forEach((t, i) => {
+      const row = document.createElement("div");
+      row.className = "track-row";
+      row.innerHTML = `
+        <div class="track-name">${t.name}</div>
+        <div class="track-controls">
+          <input type="range" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
+          <div class="btn-group">
+            <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})">PRE</button>
+            <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})">S</button>
+            <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})">M</button>
+          </div>
+        </div>
+      `;
+      listContainer.appendChild(row);
+    });
+
+    status.innerText = "Prêt à la lecture";
+    playBtn.disabled = false;
+  }
+
+  function playAll(offset = 0) {
+    stopAllSources();
+    tracks.forEach(t => {
+      if (t.player && t.player.loaded) {
+        t.player.start(Tone.now(), offset);
+      }
+    });
+    updateMix();
+    isPlaying = true;
+    playBtn.innerText = "⏸";
+    status.innerText = "Lecture en cours...";
+  }
+
+  function stopAllSources() {
+    tracks.forEach(t => {
+      if (t.player) t.player.stop();
+    });
+  }
+
+  playBtn.onclick = async () => {
+    if (typeof Tone !== 'undefined') await Tone.start();
+
+    if (isPlaying) {
+      pauseOffset = tracks[0] ? tracks[0].player.toSeconds(tracks[0].player.state === "started" ? Tone.now() - tracks[0].player._startTime : 0) + pauseOffset : 0;
+      stopAllSources();
+      isPlaying = false;
+      playBtn.innerText = "▶";
+      status.innerText = "En pause";
+    } else {
+      playAll(pauseOffset);
+    }
+  };
+
+  setInterval(() => {
+    if (isPlaying && duration > 0 && tracks[0] && tracks[0].player && tracks[0].player.state === "started") {
+      const cur = Math.min(duration, tracks[0].player.toSeconds(Tone.now() - tracks[0].player._startTime) + pauseOffset);
+      document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
+      document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
+      if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; }
+    }
+  }, 100);
+
+  document.getElementById("timeline").onclick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const targetTime = ((e.clientX - rect.left) / rect.width) * duration;
+    pauseOffset = targetTime;
+    if (isPlaying) playAll(targetTime);
+    else {
+      document.getElementById("progress").style.width = `${(targetTime / duration) * 100}%`;
+      document.getElementById("timeDisplay").innerText = `${formatTime(targetTime)} / ${formatTime(duration)}`;
+    }
+  };
+
+  function setVolume(i, v) { tracks[i].baseVol = parseFloat(v); updateMix(); }
+  function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
+  function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
+  function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
+
+  function updateMix() {
+    const hasSolo = tracks.some(t => t.solo);
+    const hasPre = tracks.some(t => t.pre);
+    tracks.forEach(t => {
+      let v = t.baseVol;
+      if (t.mute) v = 0;
+      else if (hasSolo) v = t.solo ? t.baseVol : 0;
+      else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
+      
+      const db = v === 0 ? -Infinity : 20 * Math.log10(v);
+      if (t.volumeNode) t.volumeNode.volume.value = db;
+    });
+  }
+
+  function formatTime(s) {
+    const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+</script>
+</body>
+</html>
