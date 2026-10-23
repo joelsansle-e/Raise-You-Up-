@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v16)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v17)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -51,7 +51,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v16</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v17</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -104,7 +104,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v16)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v17)</div>
     <div class="controls-row">
       <button class="play-btn" id="playBtn" disabled>▶</button>
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
@@ -131,14 +131,22 @@
       const res = await fetch('./playlist.json?v=' + new Date().getTime());
       if (!res.ok) throw new Error("Fichier playlist.json non trouvé");
       const data = await res.json();
-      availableProjects = Array.isArray(data) ? data : (data.projects || []);
+      
+      // Adaptation flexible selon la structure du JSON généré par l'Action GitHub
+      if (Array.isArray(data)) {
+        availableProjects = data;
+      } else if (data.projects && Array.isArray(data.projects)) {
+        availableProjects = data.projects;
+      } else {
+        availableProjects = [data]; // Fallback si le JSON est un objet unique
+      }
       
       select.innerHTML = '<option value="">-- Choisir un morceau --</option>';
       if (availableProjects.length > 0) {
         availableProjects.forEach((p, idx) => {
           let opt = document.createElement("option");
           opt.value = idx;
-          opt.innerText = p.title || p.name || `Morceau ${idx + 1}`;
+          opt.innerText = p.title || p.name || p.folder || `Morceau ${idx + 1}`;
           select.appendChild(opt);
         });
         status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
@@ -196,6 +204,7 @@
     document.getElementById("progress").style.width = "0%";
     
     const proj = availableProjects[idx];
+    console.log("Projet sélectionné :", proj);
     status.innerText = "Chargement des pistes en cours...";
 
     if (!audioCtx) {
@@ -217,11 +226,20 @@
     listContainer.innerHTML = "";
 
     duration = 0;
-    const trackListObj = proj.tracks || proj.files || [];
-    let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
+    
+    // Extraction sécurisée des fichiers et du dossier peu importe la structure du JSON
+    const folder = proj.folder || proj.path || proj.name || '';
+    const trackListObj = proj.tracks || proj.files || proj.items || [];
+    let trackFiles = [];
+    
+    if (Array.isArray(trackListObj)) {
+      trackFiles = trackListObj;
+    } else if (typeof trackListObj === 'object' && trackListObj !== null) {
+      trackFiles = Object.values(trackListObj);
+    }
 
     if (trackFiles.length === 0) {
-      status.innerText = "Aucune piste trouvée pour ce morceau dans playlist.json.";
+      status.innerText = "Erreur : playlist.json ne contient aucune piste pour ce morceau.";
       return;
     }
 
@@ -229,19 +247,21 @@
     let lastErrorUrl = "";
 
     for (let i = 0; i < trackFiles.length; i++) {
-      const fileName = trackFiles[i];
-      const trackName = fileName.replace(/\.[^/.]+$/, "");
-      const folder = proj.folder || proj.path || '';
+      let fileName = trackFiles[i];
+      // Si le JSON renvoie un objet au lieu d'une string pour chaque piste
+      if (typeof fileName === 'object' && fileName !== null) {
+        fileName = fileName.name || fileName.file || fileName.filename || '';
+      }
       
-      // Encodage propre du chemin pour gérer les espaces et caractères spéciaux
-      const cleanFolder = folder.trim().replace(/\/$/, "");
+      const trackName = String(fileName).replace(/\.[^/.]+$/, "");
+      const cleanFolder = String(folder).trim().replace(/\/$/, "");
       const url = cleanFolder ? `${cleanFolder}/${encodeURIComponent(fileName)}` : encodeURIComponent(fileName);
 
       try {
         const response = await fetch(url);
         if (!response.ok) {
           lastErrorUrl = url;
-          throw new Error(`HTTP ${response.status} sur ${url}`);
+          throw new Error(`HTTP ${response.status}`);
         }
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
@@ -268,12 +288,12 @@
           source: null
         });
       } catch (e) {
-        console.error("Erreur chargement piste:", fileName, e);
+        console.error("Erreur chargement piste:", url, e);
       }
     }
 
     if (tracks.length === 0) {
-      status.innerText = `Erreur 404 : impossible d'ouvrir "${lastErrorUrl}". Vérifiez le nom du dossier et des fichiers.`;
+      status.innerText = `Erreur 404 sur : "${lastErrorUrl}". Ouvrez la console (F12) pour voir le détail.`;
       return;
     }
 
