@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v29)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v30)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -54,7 +54,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v29</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v30</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -107,7 +107,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v29)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v30)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -193,6 +193,12 @@
 
   function resetTempo() { changeTempo(1.0); }
 
+  function fetchAudioBuffer(url) {
+    return new Promise((resolve, reject) => {
+      const buffer = new Tone.ToneAudioBuffer(url, () => resolve(buffer), (err) => reject(err));
+    });
+  }
+
   async function switchProject(idx) {
     if (idx === "") return;
     stopAllSources();
@@ -242,34 +248,32 @@
       urlWithFolder = urlWithFolder.split('/').map(part => encodeURIComponent(part)).join('/');
       let urlDirect = encodeURIComponent(fileNameOnly);
 
-      let loadedSuccessfully = false;
-      
-      // Utilisation de GrainPlayer pour conserver le pitch lors de la variation de tempo
-      let player = new Tone.GrainPlayer({
-        grainSize: 0.2,
-        overlap: 0.1
-      });
-      
-      player.playbackRate = currentTempoRatio;
-      player.detune = currentPitchSemitones * 100;
+      let loadedBuffer = null;
 
       try {
-        await player.load(urlWithFolder);
-        loadedSuccessfully = true;
+        loadedBuffer = await fetchAudioBuffer(urlWithFolder);
       } catch (e1) {
         try {
-          await player.load(urlDirect);
-          loadedSuccessfully = true;
+          loadedBuffer = await fetchAudioBuffer(urlDirect);
         } catch (e2) {
           console.error("Impossible de charger la piste :", fileNameOnly);
         }
       }
 
-      if (loadedSuccessfully) {
+      if (loadedBuffer) {
+        let player = new Tone.GrainPlayer({
+          url: loadedBuffer,
+          grainSize: 0.2,
+          overlap: 0.1
+        });
+
+        player.playbackRate = currentTempoRatio;
+        player.detune = currentPitchSemitones * 100;
+
         const volumeNode = new Tone.Volume(0).toDestination();
         player.connect(volumeNode);
 
-        if (player.buffer.duration > duration) duration = player.buffer.duration;
+        if (loadedBuffer.duration > duration) duration = loadedBuffer.duration;
         loaded++;
         status.innerText = `Chargement (${loaded}/${trackFiles.length})...`;
 
