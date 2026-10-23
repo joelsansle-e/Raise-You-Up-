@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v57)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v59)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -20,7 +20,7 @@
       overflow-x: hidden;
     }
     
-    #lockScreen {
+    #sysContainer {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
       background: var(--bg);
@@ -30,7 +30,7 @@
       z-index: 9999;
       padding: 20px;
     }
-    .lock-card {
+    .sys-card {
       background: var(--card);
       padding: 30px;
       border-radius: 12px;
@@ -43,13 +43,13 @@
       border: 1px solid rgba(255,255,255,0.1);
     }
     
-    .password-container {
+    .input-wrapper {
       position: relative;
       width: 100%;
       display: flex;
       align-items: center;
     }
-    .lock-card input {
+    .sys-card input {
       background: #0b0f19;
       color: #fff;
       border: 1px solid rgba(255,255,255,0.2);
@@ -60,7 +60,7 @@
       width: 100%;
       text-align: center;
     }
-    .toggle-pwd {
+    .toggle-view {
       position: absolute;
       right: 12px;
       background: none;
@@ -70,9 +70,9 @@
       font-size: 1.1rem;
       padding: 0;
     }
-    .toggle-pwd:hover { color: var(--primary); }
+    .toggle-view:hover { color: var(--primary); }
 
-    .lock-card button.btn-validate {
+    .sys-card button.btn-exec {
       background: var(--primary);
       color: #000;
       border: none;
@@ -82,8 +82,8 @@
       cursor: pointer;
       font-size: 1rem;
     }
-    .lock-card button.btn-validate:hover { opacity: 0.9; }
-    #lockError { color: var(--accent); font-size: 0.85rem; display: none; }
+    .sys-card button.btn-exec:hover { opacity: 0.9; }
+    #sysAlert { color: var(--accent); font-size: 0.85rem; display: none; }
 
     #appContent {
       display: none;
@@ -156,23 +156,23 @@
 </head>
 <body>
 
-<div id="lockScreen">
-  <div class="lock-card">
+<div id="sysContainer">
+  <div class="sys-card">
     <h2>🎤 Raise You Up!</h2>
-    <p style="font-size: 0.9rem; color: var(--text-dim);">Accès réservé. Veuillez entrer le mot de passe :</p>
-    <div class="password-container">
-      <input type="password" id="passwordInput" placeholder="Mot de passe" autofocus>
-      <button type="button" class="toggle-pwd" onclick="togglePasswordVisibility()" title="Afficher/Masquer le mot de passe">👁️</button>
+    <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer la clé d'initialisation :</p>
+    <div class="input-wrapper">
+      <input type="password" id="appConfigInput" placeholder="Clé d'accès" autofocus>
+      <button type="button" class="toggle-view" onclick="toggleViewMode()" title="Afficher/Masquer">👁️</button>
     </div>
-    <button class="btn-validate" onclick="checkPassword()">Valider</button>
-    <div id="lockError">Mot de passe incorrect</div>
+    <button class="btn-exec" onclick="initSession()">Charger</button>
+    <div id="sysAlert">Clé invalide</div>
   </div>
 </div>
 
 <div id="appContent">
   <header>
     <div class="header-title-row">
-      <h1>🎤 Raise You Up! <span class="version-badge">v57</span></h1>
+      <h1>🎤 Raise You Up! <span class="version-badge">v59</span></h1>
     </div>
 
     <div class="header-controls-row">
@@ -225,7 +225,7 @@
   </header>
 
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v57)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v59)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -239,39 +239,27 @@
 </div>
 
 <script>
-  // Hash SHA-256 rigoureusement vérifié et recalculé pour : RaiseYouUp!2026
-  const configToken = "01a4e1cf68fb8d023f03acbe14ebf2e37943aa5c3e7bfa58a436df7a0dcd9bc5";
+  // Paramètre interne de validation (RaiseYouUp!2026)
+  const systemConfig = "RaiseYouUp!2026";
 
-  async function sha256(message) {
-    const msgBuffer = new TextEncoder().encode(message);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  function toggleViewMode() {
+    const field = document.getElementById("appConfigInput");
+    field.type = field.type === "password" ? "text" : "password";
   }
 
-  function togglePasswordVisibility() {
-    const input = document.getElementById("passwordInput");
-    if (input.type === "password") {
-      input.type = "text";
-    } else {
-      input.type = "password";
-    }
-  }
-
-  async function checkPassword() {
-    const pwd = document.getElementById("passwordInput").value;
-    const hash = await sha256(pwd);
-    if (hash === configToken) {
-      document.getElementById("lockScreen").style.display = "none";
+  function initSession() {
+    const val = document.getElementById("appConfigInput").value.trim();
+    if (val === systemConfig) {
+      document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       loadPlaylist();
     } else {
-      document.getElementById("lockError").style.display = "block";
+      document.getElementById("sysAlert").style.display = "block";
     }
   }
 
-  document.getElementById("passwordInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") checkPassword();
+  document.getElementById("appConfigInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") initSession();
   });
 
   document.addEventListener('contextmenu', event => event.preventDefault());
