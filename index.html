@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v32)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v35)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -36,8 +36,8 @@
     .tracks-list { display: flex; flex-direction: column; gap: 10px; }
     
     .track-row { display: flex; align-items: center; gap: 15px; padding: 14px 20px; flex-wrap: wrap; }
-    .track-name { flex: 1 1 250px; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
-    .track-controls { display: flex; align-items: center; gap: 15px; flex: 2 1 300px; }
+    .track-name { flex: 1 1 220px; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
+    .track-controls { display: flex; align-items: center; gap: 12px; flex: 2 1 320px; }
     
     input[type=range] { -webkit-appearance: none; flex: 1; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; }
@@ -54,7 +54,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v32</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v35</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -107,7 +107,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v32)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v35)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -172,14 +172,15 @@
   let playStartRealTime = 0;
   let currentPitchSemitones = 0;
   let currentTempoRatio = 1.0;
-  let pitchShiftNode = null;
 
   function changePitch(semitones) {
     currentPitchSemitones = parseInt(semitones, 10);
     document.getElementById("pitchSelect").value = currentPitchSemitones;
-    if (pitchShiftNode) {
-      pitchShiftNode.pitch = currentPitchSemitones;
-    }
+    tracks.forEach(t => {
+      if (t.player) {
+        t.player.detune = currentPitchSemitones * 100;
+      }
+    });
   }
 
   function stepPitch(delta) {
@@ -227,11 +228,6 @@
 
     if (typeof Tone !== 'undefined') {
       await Tone.start();
-      if (!pitchShiftNode) {
-        pitchShiftNode = new Tone.PitchShift({ pitch: currentPitchSemitones }).toDestination();
-      } else {
-        pitchShiftNode.pitch = currentPitchSemitones;
-      }
     }
 
     tracks = [];
@@ -277,20 +273,17 @@
       }
 
       if (loadedBuffer) {
-        // Retour au Tone.Player standard pour une pureté de son maximale sans effet trémolo
-        let player = new Tone.Player({
-          url: loadedBuffer
+        let player = new Tone.GrainPlayer({
+          url: loadedBuffer,
+          grainSize: 0.1,
+          overlap: 0.05
         });
 
         player.playbackRate = currentTempoRatio;
+        player.detune = currentPitchSemitones * 100;
 
-        const volumeNode = new Tone.Volume(0);
+        const volumeNode = new Tone.Volume(0).toDestination();
         player.connect(volumeNode);
-        if (pitchShiftNode) {
-          volumeNode.connect(pitchShiftNode);
-        } else {
-          volumeNode.toDestination();
-        }
 
         if (loadedBuffer.duration > duration) duration = loadedBuffer.duration;
         loaded++;
@@ -319,11 +312,12 @@
       row.innerHTML = `
         <div class="track-name">${t.name}</div>
         <div class="track-controls">
-          <input type="range" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
+          <input type="range" id="vol-range-${i}" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
+          <button class="btn-reset" onclick="resetVolume(${i})">RESET</button>
           <div class="btn-group">
-            <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})">PRE</button>
-            <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})">S</button>
-            <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})">M</button>
+            <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})" title="Mettre en valeur cette piste avec le reste en fond">FOCUS</button>
+            <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})" title="Écouter uniquement cette piste">S</button>
+            <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})" title="Couper cette piste">M</button>
           </div>
         </div>
       `;
@@ -434,7 +428,18 @@
     }
   }, 100);
 
-  function setVolume(i, v) { tracks[i].baseVol = parseFloat(v); updateMix(); }
+  function setVolume(i, v) { 
+    tracks[i].baseVol = parseFloat(v); 
+    updateMix(); 
+  }
+
+  function resetVolume(i) {
+    tracks[i].baseVol = 1.0;
+    const slider = document.getElementById(`vol-range-${i}`);
+    if (slider) slider.value = 1.0;
+    updateMix();
+  }
+
   function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
   function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
   function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
