@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v21)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v23)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -51,7 +51,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v21</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v23</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -104,7 +104,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v21)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v23)</div>
     <div class="controls-row">
       <button class="play-btn" id="playBtn" disabled>▶</button>
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
@@ -210,7 +210,7 @@
 
     duration = 0;
     
-    // Extraction directe des fichiers de pistes fournis par le JSON
+    const folderName = proj.folder || proj.path || proj.name || proj.title || '';
     const trackListObj = proj.tracks || proj.files || proj.items || [];
     let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
 
@@ -227,8 +227,17 @@
       }
       
       const trackName = String(fileEntry).replace(/\.[^/.]+$/, "");
-      // Utilisation directe du chemin brut ou encodé fourni par le fichier JSON sans le préfixer aveuglément
-      const url = String(fileEntry);
+      
+      // Encodage propre segment par segment pour respecter les espaces et les accents (ex: é)
+      const cleanFolder = String(folderName).trim();
+      let url = cleanFolder ? `${encodeURIComponent(cleanFolder)}/${encodeURIComponent(fileEntry)}` : encodeURIComponent(fileEntry);
+      
+      // Sécurité supplémentaire : décoder les éventuels doubles encodages pour uniformiser
+      try {
+        url = decodeURIComponent(url);
+        // Ré-encoder correctement chaque partie de l'URL pour le serveur web
+        url = url.split('/').map(segment => encodeURIComponent(segment)).join('/');
+      } catch(e) {}
 
       try {
         const player = new Tone.Player();
