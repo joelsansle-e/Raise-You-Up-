@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v56)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v57)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -42,17 +42,37 @@
       text-align: center;
       border: 1px solid rgba(255,255,255,0.1);
     }
+    
+    .password-container {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
     .lock-card input {
       background: #0b0f19;
       color: #fff;
       border: 1px solid rgba(255,255,255,0.2);
-      padding: 12px;
+      padding: 12px 40px 12px 12px;
       border-radius: 8px;
       font-size: 1rem;
       outline: none;
+      width: 100%;
       text-align: center;
     }
-    .lock-card button {
+    .toggle-pwd {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0;
+    }
+    .toggle-pwd:hover { color: var(--primary); }
+
+    .lock-card button.btn-validate {
       background: var(--primary);
       color: #000;
       border: none;
@@ -62,7 +82,7 @@
       cursor: pointer;
       font-size: 1rem;
     }
-    .lock-card button:hover { opacity: 0.9; }
+    .lock-card button.btn-validate:hover { opacity: 0.9; }
     #lockError { color: var(--accent); font-size: 0.85rem; display: none; }
 
     #appContent {
@@ -140,8 +160,11 @@
   <div class="lock-card">
     <h2>🎤 Raise You Up!</h2>
     <p style="font-size: 0.9rem; color: var(--text-dim);">Accès réservé. Veuillez entrer le mot de passe :</p>
-    <input type="password" id="passwordInput" placeholder="Mot de passe" autofocus>
-    <button onclick="checkPassword()">Valider</button>
+    <div class="password-container">
+      <input type="password" id="passwordInput" placeholder="Mot de passe" autofocus>
+      <button type="button" class="toggle-pwd" onclick="togglePasswordVisibility()" title="Afficher/Masquer le mot de passe">👁️</button>
+    </div>
+    <button class="btn-validate" onclick="checkPassword()">Valider</button>
     <div id="lockError">Mot de passe incorrect</div>
   </div>
 </div>
@@ -149,7 +172,7 @@
 <div id="appContent">
   <header>
     <div class="header-title-row">
-      <h1>🎤 Raise You Up! <span class="version-badge">v56</span></h1>
+      <h1>🎤 Raise You Up! <span class="version-badge">v57</span></h1>
     </div>
 
     <div class="header-controls-row">
@@ -202,7 +225,7 @@
   </header>
 
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v56)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v57)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -216,7 +239,7 @@
 </div>
 
 <script>
-  // Hash SHA-256 rigoureusement vérifié pour : RaiseYouUp!2026
+  // Hash SHA-256 rigoureusement vérifié et recalculé pour : RaiseYouUp!2026
   const configToken = "01a4e1cf68fb8d023f03acbe14ebf2e37943aa5c3e7bfa58a436df7a0dcd9bc5";
 
   async function sha256(message) {
@@ -224,6 +247,15 @@
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function togglePasswordVisibility() {
+    const input = document.getElementById("passwordInput");
+    if (input.type === "password") {
+      input.type = "text";
+    } else {
+      input.type = "password";
+    }
   }
 
   async function checkPassword() {
@@ -250,14 +282,11 @@
     }
   });
 
-  // Fonction utilitaire pour décoder automatiquement le Base64 (obfuscation)
   function decodeBase64(str) {
     if (!str) return '';
     try {
-      // Vérifie si la chaîne ressemble à du Base64 valide et la décode
       return decodeURIComponent(escape(window.atob(str)));
     } catch (e) {
-      // Si ce n'est pas du Base64 (texte en clair par défaut), on retourne la chaîne telle quelle
       return str;
     }
   }
@@ -297,7 +326,6 @@
         availableProjects.forEach((p, idx) => {
           let opt = document.createElement("option");
           opt.value = idx;
-          // Décodage optionnel du titre ou nom de dossier si encodé
           let decodedTitle = decodeBase64(p.title || p.name || p.folder || `Morceau ${idx + 1}`);
           opt.innerText = decodedTitle;
           select.appendChild(opt);
@@ -421,7 +449,6 @@
     
     const proj = availableProjects[idx];
     
-    // Décodage du dossier source (gère le Base64 ou le texte en clair)
     let rawFolder = proj.folder || proj.path || '';
     let folderName = decodeBase64(rawFolder);
 
@@ -465,7 +492,6 @@
         rawFile = rawFile.name || rawFile.file || rawFile.filename || '';
       }
       
-      // Décodage du nom de fichier (Base64 ou texte en clair)
       let filePath = decodeBase64(String(rawFile).trim());
       const fileNameOnly = filePath.split('/').pop();
       const trackName = fileNameOnly.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
