@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v30)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v31)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -54,7 +54,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v30</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v31</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -107,7 +107,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v30)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v31)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -129,6 +129,20 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     loadPlaylist();
+  });
+
+  // Raccourci touche Espace pour Pause / Play
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' || e.key === ' ') {
+      // Évite de déclencher l'action si l'utilisateur est focalisé sur un champ texte ou un menu déroulant
+      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+        return;
+      }
+      e.preventDefault();
+      if (!playBtn.disabled) {
+        togglePlay();
+      }
+    }
   });
 
   async function loadPlaylist() {
@@ -261,10 +275,11 @@
       }
 
       if (loadedBuffer) {
+        // Paramètres granulaires ajustés pour éviter l'écho à haute tonalité
         let player = new Tone.GrainPlayer({
           url: loadedBuffer,
-          grainSize: 0.2,
-          overlap: 0.1
+          grainSize: 0.1,
+          overlap: 0.05
         });
 
         player.playbackRate = currentTempoRatio;
@@ -340,7 +355,7 @@
     });
   }
 
-  playBtn.onclick = async () => {
+  async function togglePlay() {
     if (typeof Tone !== 'undefined') await Tone.start();
 
     if (isPlaying) {
@@ -354,7 +369,9 @@
       if (pauseOffset >= duration) pauseOffset = 0;
       playAll(pauseOffset);
     }
-  };
+  }
+
+  playBtn.onclick = togglePlay;
 
   rewindBtn.onclick = () => {
     stopAllSources();
