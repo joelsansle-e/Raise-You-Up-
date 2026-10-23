@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up!</title>
+  <title>Lecteur Multipiste - Raise You Up! (v14)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -43,13 +43,15 @@
     .btn-track.active-pre { background: var(--primary); color: #000; }
     .btn-track.active-solo { background: #eccc68; color: #000; }
     .btn-track.active-mute { background: var(--accent); color: #fff; }
+    
+    .version-badge { font-size: 0.75rem; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 10px; display: inline-block; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up!</h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v14</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -139,7 +141,7 @@
           opt.innerText = p.title || p.name || `Morceau ${idx + 1}`;
           select.appendChild(opt);
         });
-        status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
+        status.innerText = "Sélectionnez un morceau dans le menu ci-dessus (v14 chargée)";
       } else {
         status.innerText = "Aucun morceau trouvé dans la playlist.";
       }
@@ -207,9 +209,22 @@
     listContainer.innerHTML = "";
 
     duration = 0;
-    let loaded = 0;
-    const trackFiles = proj.tracks || proj.files || [];
+    const trackListObj = proj.tracks;
+    
+    // Récupération sécurisée de la liste des fichiers selon la structure du JSON
+    let trackFiles = [];
+    if (Array.isArray(trackListObj)) {
+      trackFiles = trackListObj;
+    } else if (trackListObj && typeof trackListObj === 'object') {
+      trackFiles = Object.values(trackListObj);
+    }
 
+    if (trackFiles.length === 0) {
+      status.innerText = "Aucune piste trouvée pour ce morceau.";
+      return;
+    }
+
+    let loaded = 0;
     for (let i = 0; i < trackFiles.length; i++) {
       const fileName = trackFiles[i];
       const trackName = fileName.replace(/\.[^/.]+$/, "");
@@ -247,6 +262,7 @@
       }
     }
 
+    // Affichage explicite des pistes dans le DOM
     tracks.forEach((t, i) => {
       const row = document.createElement("div");
       row.className = "track-row";
