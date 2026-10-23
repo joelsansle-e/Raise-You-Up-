@@ -200,4 +200,195 @@
 
   function changeTempo(val) {
     currentTempoRatio = parseFloat(val);
-    document.getElementById("tempoSlider").
+    document.getElementById("tempoSlider").value = currentTempoRatio;
+    document.getElementById("tempoLabel").innerText = `${Math.round(currentTempoRatio * 100)}%`;
+    
+    tracks.forEach(t => {
+      if (t.player) {
+        t.player.playbackRate = currentTempoRatio;
+      }
+    });
+  }
+
+  function resetTempo() {
+    changeTempo(1.0);
+  }
+
+  async function switchProject(idx) {
+    if (idx === "") return;
+    stopAllSources();
+    isPlaying = false;
+    pauseOffset = 0;
+    playBtn.innerText = "▶";
+    playBtn.disabled = true;
+    document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
+    document.getElementById("progress").style.width = "0%";
+    
+    const proj = availableProjects[idx];
+    status.innerText = "Chargement des pistes...";
+
+    try {
+      if (typeof Tone !== 'undefined') {
+        await Tone.start();
+        if (!pitchShiftNode) {
+          pitchShiftNode = new Tone.PitchShift({ pitch: currentPitchSemitones }).toDestination();
+        }
+      }
+    } catch(e) {
+      console.warn("Démarrage Tone.js réessayé au clic lecture");
+    }
+
+    tracks = [];
+    const listContainer = document.getElementById("tracksList");
+    listContainer.innerHTML = "";
+
+    duration = 0;
+    let loaded = 0;
+
+    for (let i = 0; i < proj.tracks.length; i++) {
+      const trackName = proj.tracks[i].replace(/\.[^/.]+$/, "");
+      const url = `${proj.folder}/${proj.tracks[i]}`;
+      
+      try {
+        const player = new Tone.Player({
+          url: url,
+          playbackRate: currentTempoRatio,
+          onload: () => {
+            if (player.buffer.duration > duration) duration = player.buffer.duration;
+            loaded++;
+            status.innerText = `Chargement (${loaded}/${proj.tracks.length})...`;
+            if (loaded === proj.tracks.length) {
+              status.innerText = "Prêt à la lecture";
+              playBtn.disabled = false;
+            }
+          }
+        });
+
+        const volumeNode = new Tone.Volume(0);
+        player.connect(volumeNode);
+        if (pitchShiftNode) {
+          volumeNode.connect(pitchShiftNode);
+        } else {
+          volumeNode.toDestination();
+        }
+
+        tracks.push({
+          name: trackName,
+          player: player,
+          volumeNode: volumeNode,
+          baseVol: 1,
+          pre: false,
+          solo: false,
+          mute: false
+        });
+      } catch(e) {
+        console.error(e);
+      }
+    }
+
+    tracks.forEach((t, i) => {
+      const row = document.createElement("div");
+      row.className = "track-row";
+      row.innerHTML = `
+        <div class="track-name">${t.name}</div>
+        <input type="range" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
+        <div class="btn-group">
+          <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})">PRE</button>
+          <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})">S</button>
+          <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})">M</button>
+        </div>
+      `;
+      listContainer.appendChild(row);
+    });
+  }
+
+  function playAll(offset = 0) {
+    stopAllSources();
+    tracks.forEach(t => {
+      if (t.player.loaded) {
+        t.player.start(Tone.now(), offset);
+      }
+    });
+    updateMix();
+    isPlaying = true;
+    playBtn.innerText = "⏸";
+    status.innerText = "Lecture en cours...";
+  }
+
+  function stopAllSources() {
+    tracks.forEach(t => {
+      if (t.player) t.player.stop();
+    });
+  }
+
+  playBtn.onclick = async () => {
+    try {
+      await Tone.start();
+      if (!pitchShiftNode) {
+        pitchShiftNode = new Tone.PitchShift({ pitch: currentPitchSemitones }).toDestination();
+        tracks.forEach(t => {
+          try {
+            t.volumeNode.disconnect();
+            t.volumeNode.connect(pitchShiftNode);
+          } catch(e){}
+        });
+      }
+    } catch(e){}
+
+    if (isPlaying) {
+      pauseOffset = tracks[0] ? tracks[0].player.toSeconds(tracks[0].player.state === "started" ? Tone.now() - tracks[0].player._startTime : 0) + pauseOffset : 0;
+      stopAllSources();
+      isPlaying = false;
+      playBtn.innerText = "▶";
+      status.innerText = "En pause";
+    } else {
+      playAll(pauseOffset);
+    }
+  };
+
+  setInterval(() => {
+    if (isPlaying && duration > 0 && tracks[0] && tracks[0].player.state === "started") {
+      const cur = Math.min(duration, tracks[0].player.toSeconds(Tone.now() - tracks[0].player._startTime) + pauseOffset);
+      document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
+      document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
+      if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; }
+    }
+  }, 100);
+
+  document.getElementById("timeline").onclick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const targetTime = ((e.clientX - rect.left) / rect.width) * duration;
+    pauseOffset = targetTime;
+    if (isPlaying) playAll(targetTime);
+    else {
+      document.getElementById("progress").style.width = `${(targetTime / duration) * 100}%`;
+      document.getElementById("timeDisplay").innerText = `${formatTime(targetTime)} / ${formatTime(duration)}`;
+    }
+  };
+
+  function setVolume(i, v) { tracks[i].baseVol = parseFloat(v); updateMix(); }
+  function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
+  function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
+  function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
+
+  function updateMix() {
+    const hasSolo = tracks.some(t => t.solo);
+    const hasPre = tracks.some(t => t.pre);
+    tracks.forEach(t => {
+      let v = t.baseVol;
+      if (t.mute) v = 0;
+      else if (hasSolo) v = t.solo ? t.baseVol : 0;
+      else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
+      
+      const db = v === 0 ? -Infinity : 20 * Math.log10(v);
+      t.volumeNode.volume.value = db;
+    });
+  }
+
+  function formatTime(s) {
+    const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+</script>
+</body>
+</html>
