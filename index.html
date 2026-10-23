@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v31)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v32)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -54,7 +54,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v31</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v32</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -107,7 +107,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v31)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v32)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -131,10 +131,8 @@
     loadPlaylist();
   });
 
-  // Raccourci touche Espace pour Pause / Play
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.key === ' ') {
-      // Évite de déclencher l'action si l'utilisateur est focalisé sur un champ texte ou un menu déroulant
       if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
         return;
       }
@@ -174,15 +172,14 @@
   let playStartRealTime = 0;
   let currentPitchSemitones = 0;
   let currentTempoRatio = 1.0;
+  let pitchShiftNode = null;
 
   function changePitch(semitones) {
     currentPitchSemitones = parseInt(semitones, 10);
     document.getElementById("pitchSelect").value = currentPitchSemitones;
-    tracks.forEach(t => {
-      if (t.player) {
-        t.player.detune = currentPitchSemitones * 100;
-      }
-    });
+    if (pitchShiftNode) {
+      pitchShiftNode.pitch = currentPitchSemitones;
+    }
   }
 
   function stepPitch(delta) {
@@ -230,6 +227,11 @@
 
     if (typeof Tone !== 'undefined') {
       await Tone.start();
+      if (!pitchShiftNode) {
+        pitchShiftNode = new Tone.PitchShift({ pitch: currentPitchSemitones }).toDestination();
+      } else {
+        pitchShiftNode.pitch = currentPitchSemitones;
+      }
     }
 
     tracks = [];
@@ -256,7 +258,7 @@
       
       let filePath = String(rawFile).trim();
       const fileNameOnly = filePath.split('/').pop();
-      const trackName = fileNameOnly.replace(/\.[^/.]+$/, "");
+      const trackName = fileNameOnly.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
       
       let urlWithFolder = folderName ? `${folderName}/${filePath}` : filePath;
       urlWithFolder = urlWithFolder.split('/').map(part => encodeURIComponent(part)).join('/');
@@ -275,18 +277,20 @@
       }
 
       if (loadedBuffer) {
-        // Paramètres granulaires ajustés pour éviter l'écho à haute tonalité
-        let player = new Tone.GrainPlayer({
-          url: loadedBuffer,
-          grainSize: 0.1,
-          overlap: 0.05
+        // Retour au Tone.Player standard pour une pureté de son maximale sans effet trémolo
+        let player = new Tone.Player({
+          url: loadedBuffer
         });
 
         player.playbackRate = currentTempoRatio;
-        player.detune = currentPitchSemitones * 100;
 
-        const volumeNode = new Tone.Volume(0).toDestination();
+        const volumeNode = new Tone.Volume(0);
         player.connect(volumeNode);
+        if (pitchShiftNode) {
+          volumeNode.connect(pitchShiftNode);
+        } else {
+          volumeNode.toDestination();
+        }
 
         if (loadedBuffer.duration > duration) duration = loadedBuffer.duration;
         loaded++;
