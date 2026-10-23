@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v37)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v41)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -36,11 +36,14 @@
     .tracks-list { display: flex; flex-direction: column; gap: 10px; }
     
     .track-row { display: flex; align-items: center; gap: 15px; padding: 14px 20px; flex-wrap: wrap; }
-    .track-name { flex: 1 1 220px; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
-    .track-controls { display: flex; align-items: center; gap: 12px; flex: 2 1 320px; }
+    .track-name { flex: 1 1 200px; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
+    .track-controls { display: flex; align-items: center; gap: 10px; flex: 2 1 340px; }
     
     input[type=range] { -webkit-appearance: none; flex: 1; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+    
+    .vol-label { font-family: monospace; font-size: 0.85rem; color: var(--primary); min-width: 38px; text-align: right; }
+
     .btn-group { display: flex; gap: 5px; }
     .btn-track { padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
     .btn-track.active-pre { background: var(--primary); color: #000; }
@@ -54,7 +57,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v37</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v41</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- 1. Choisir un morceau -->
@@ -62,7 +65,7 @@
         <option value="">-- Choisir un morceau --</option>
       </select>
 
-      <!-- 2. Tonalité -->
+      <!-- 2. Tonalité & Affichage dynamique double -->
       <div class="control-group">
         <span>Tonalité :</span>
         <button class="btn-step" onclick="stepPitch(-1)">-</button>
@@ -95,9 +98,10 @@
         </select>
         <button class="btn-step" onclick="stepPitch(1)">+</button>
         <button class="btn-reset" onclick="resetPitch()">RESET</button>
+        <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); margin-left: 4px; min-width: 65px;"></span>
       </div>
 
-      <!-- 3. Tempo élargi avec pas de 0.01 (1%) -->
+      <!-- 3. Tempo -->
       <div class="control-group">
         <span>Tempo :</span>
         <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 130px;">
@@ -108,7 +112,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v37)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v41)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -123,10 +127,15 @@
 
 <script>
   let availableProjects = [];
+  let currentProjectOriginalKey = "";
   const select = document.getElementById("projectSelect");
   const playBtn = document.getElementById("playBtn");
   const rewindBtn = document.getElementById("rewindBtn");
   const status = document.getElementById("status");
+
+  const chromaticNotes = [
+    'C', 'Db / C#', 'D', 'Eb / D#', 'E', 'F', 'Gb / F#', 'G', 'Ab / G#', 'A', 'Bb / A#', 'B'
+  ];
 
   window.addEventListener('DOMContentLoaded', () => {
     loadPlaylist();
@@ -174,6 +183,35 @@
   let currentPitchSemitones = 0;
   let currentTempoRatio = 1.0;
 
+  function updateDynamicKeyDisplay() {
+    const keyDisplay = document.getElementById("currentKeyDisplay");
+    if (!currentProjectOriginalKey) {
+      keyDisplay.innerText = "";
+      return;
+    }
+    
+    let base = currentProjectOriginalKey.trim();
+    let isMinor = base.toLowerCase().includes('m') && !base.toLowerCase().includes('maj');
+    let rootNote = base.replace(/m.*$/, "").toUpperCase();
+    
+    let idx = chromaticNotes.findIndex(item => {
+      let parts = item.split(' / ');
+      return parts.includes(rootNote);
+    });
+
+    if (idx === -1) {
+      keyDisplay.innerText = `(${currentProjectOriginalKey})`;
+      return;
+    }
+
+    let newIdx = (idx + currentPitchSemitones) % 12;
+    if (newIdx < 0) newIdx += 12;
+    
+    let transposedNoteStr = chromaticNotes[newIdx];
+    let finalKey = transposedNoteStr + (isMinor ? 'm' : '');
+    keyDisplay.innerText = `(${finalKey})`;
+  }
+
   function changePitch(semitones) {
     currentPitchSemitones = parseInt(semitones, 10);
     document.getElementById("pitchSelect").value = currentPitchSemitones;
@@ -182,6 +220,7 @@
         t.player.detune = currentPitchSemitones * 100;
       }
     });
+    updateDynamicKeyDisplay();
   }
 
   function stepPitch(delta) {
@@ -200,8 +239,6 @@
     tracks.forEach(t => {
       if (t.player) {
         t.player.playbackRate = currentTempoRatio;
-        // Ajustement dynamique de la taille des grains pour éviter l'écho à bas tempo
-        t.player.grainSize = Math.max(0.05, 0.2 * currentTempoRatio);
       }
     });
   }
@@ -227,6 +264,23 @@
     document.getElementById("progress").style.width = "0%";
     
     const proj = availableProjects[idx];
+    
+    // Détection automatique de la tonalité : 
+    // 1. Cherche dans proj.key ou proj.originalKey
+    // 2. Sinon, cherche entre crochets [ ] dans le nom du dossier ou du titre
+    let detectedKey = proj.key || proj.originalKey || "";
+    if (!detectedKey) {
+      let textSource = proj.folder || proj.title || "";
+      let match = textSource.match(/\[([A-G][b\#]?m?)\]/i);
+      if (match) {
+        detectedKey = match[1];
+      }
+    }
+    currentProjectOriginalKey = detectedKey;
+
+    resetPitch();
+    updateDynamicKeyDisplay();
+
     status.innerText = "Chargement des pistes en cours...";
 
     if (typeof Tone !== 'undefined') {
@@ -317,6 +371,7 @@
         <div class="track-controls">
           <input type="range" id="vol-range-${i}" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
           <button class="btn-reset" onclick="resetVolume(${i})">RESET</button>
+          <span class="vol-label" id="vol-label-${i}">100%</span>
           <div class="btn-group">
             <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})" title="Mettre en valeur cette piste avec le reste en fond">FOCUS</button>
             <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})" title="Écouter uniquement cette piste">S</button>
@@ -404,6 +459,7 @@
   window.onmousemove = (e) => {
     if (!isDragging || duration <= 0) return;
     const targetTime = getTimeFromEvent(e);
+    updateTimelineUI(targetName); // (gardé intact via updateTimelineUI ci-dessous)
     updateTimelineUI(targetTime);
   };
 
@@ -433,6 +489,9 @@
 
   function setVolume(i, v) { 
     tracks[i].baseVol = parseFloat(v); 
+    const pct = Math.round(v * 100);
+    const label = document.getElementById(`vol-label-${i}`);
+    if (label) label.innerText = `${pct}%`;
     updateMix(); 
   }
 
@@ -440,6 +499,8 @@
     tracks[i].baseVol = 1.0;
     const slider = document.getElementById(`vol-range-${i}`);
     if (slider) slider.value = 1.0;
+    const label = document.getElementById(`vol-label-${i}`);
+    if (label) label.innerText = `100%`;
     updateMix();
   }
 
