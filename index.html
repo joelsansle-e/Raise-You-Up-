@@ -128,14 +128,17 @@
     try {
       const res = await fetch('./playlist.json?v=' + new Date().getTime());
       if (!res.ok) throw new Error("Fichier non trouvé");
-      availableProjects = await res.json();
+      const data = await res.json();
+      
+      // Supporte les deux formats possibles du JSON (objet avec propriété projects ou tableau direct)
+      availableProjects = Array.isArray(data) ? data : (data.projects || []);
       
       select.innerHTML = '<option value="">-- Choisir un morceau --</option>';
-      if (Array.isArray(availableProjects) && availableProjects.length > 0) {
+      if (availableProjects.length > 0) {
         availableProjects.forEach((p, idx) => {
           let opt = document.createElement("option");
           opt.value = idx;
-          opt.innerText = p.title;
+          opt.innerText = p.title || p.name || `Morceau ${idx + 1}`;
           select.appendChild(opt);
         });
         status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
@@ -207,10 +210,12 @@
 
     duration = 0;
     let loaded = 0;
+    const trackFiles = proj.tracks || proj.files || [];
 
-    const loadPromises = proj.tracks.map(async (fileName) => {
+    const loadPromises = trackFiles.map(async (fileName) => {
       const trackName = fileName.replace(/\.[^/.]+$/, "");
-      const url = `${proj.folder}/${fileName}`;
+      const folder = proj.folder || proj.path || '';
+      const url = folder ? `${folder}/${fileName}` : fileName;
       try {
         const player = new Tone.Player();
         player.playbackRate = currentTempoRatio;
@@ -226,7 +231,7 @@
 
         if (player.buffer.duration > duration) duration = player.buffer.duration;
         loaded++;
-        status.innerText = `Chargement (${loaded}/${proj.tracks.length})...`;
+        status.innerText = `Chargement (${loaded}/${trackFiles.length})...`;
 
         return {
           name: trackName,
