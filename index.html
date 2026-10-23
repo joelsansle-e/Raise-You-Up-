@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v28)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v29)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -54,7 +54,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v28</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v29</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -107,7 +107,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v28)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v29)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -160,14 +160,15 @@
   let playStartRealTime = 0;
   let currentPitchSemitones = 0;
   let currentTempoRatio = 1.0;
-  let pitchShiftNode = null;
 
   function changePitch(semitones) {
     currentPitchSemitones = parseInt(semitones, 10);
     document.getElementById("pitchSelect").value = currentPitchSemitones;
-    if (pitchShiftNode) {
-      pitchShiftNode.pitch = currentPitchSemitones;
-    }
+    tracks.forEach(t => {
+      if (t.player) {
+        t.player.detune = currentPitchSemitones * 100;
+      }
+    });
   }
 
   function stepPitch(delta) {
@@ -209,9 +210,6 @@
 
     if (typeof Tone !== 'undefined') {
       await Tone.start();
-      if (!pitchShiftNode) {
-        pitchShiftNode = new Tone.PitchShift({ pitch: currentPitchSemitones }).toDestination();
-      }
     }
 
     tracks = [];
@@ -245,8 +243,15 @@
       let urlDirect = encodeURIComponent(fileNameOnly);
 
       let loadedSuccessfully = false;
-      let player = new Tone.Player();
+      
+      // Utilisation de GrainPlayer pour conserver le pitch lors de la variation de tempo
+      let player = new Tone.GrainPlayer({
+        grainSize: 0.2,
+        overlap: 0.1
+      });
+      
       player.playbackRate = currentTempoRatio;
+      player.detune = currentPitchSemitones * 100;
 
       try {
         await player.load(urlWithFolder);
@@ -261,13 +266,8 @@
       }
 
       if (loadedSuccessfully) {
-        const volumeNode = new Tone.Volume(0);
+        const volumeNode = new Tone.Volume(0).toDestination();
         player.connect(volumeNode);
-        if (pitchShiftNode) {
-          volumeNode.connect(pitchShiftNode);
-        } else {
-          volumeNode.toDestination();
-        }
 
         if (player.buffer.duration > duration) duration = player.buffer.duration;
         loaded++;
@@ -362,7 +362,6 @@
     document.getElementById("timeDisplay").innerText = `00:00 / ${formatTime(duration)}`;
   };
 
-  // Gestion de la timeline interactive (glisser-déposer / scrubbing)
   const timeline = document.getElementById("timeline");
   let isDragging = false;
 
