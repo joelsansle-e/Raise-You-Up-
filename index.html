@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v27)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v28)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -24,12 +24,15 @@
     .btn-reset:hover { background: var(--primary); color: #000; }
 
     .player-card { display: flex; flex-direction: column; gap: 15px; }
-    .controls-row { display: flex; align-items: center; gap: 20px; }
-    .play-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: #000; border: none; font-size: 1.3rem; cursor: pointer; }
-    .play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .controls-row { display: flex; align-items: center; gap: 15px; }
+    .play-btn, .rewind-btn { width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid rgba(255,255,255,0.2); font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    .play-btn { background: var(--primary); color: #000; border: none; font-size: 1.3rem; }
+    .play-btn:disabled, .rewind-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .rewind-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+    
     .time-display { font-family: monospace; color: var(--primary); min-width: 110px; text-align: center; }
     .timeline { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; cursor: pointer; }
-    .timeline-progress { height: 100%; background: var(--primary); border-radius: 4px; width: 0%; }
+    .timeline-progress { height: 100%; background: var(--primary); border-radius: 4px; width: 0%; pointer-events: none; }
     .tracks-list { display: flex; flex-direction: column; gap: 10px; }
     
     .track-row { display: flex; align-items: center; gap: 15px; padding: 14px 20px; flex-wrap: wrap; }
@@ -51,7 +54,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v27</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v28</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -104,8 +107,9 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v27)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v28)</div>
     <div class="controls-row">
+      <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
       <div class="timeline" id="timeline">
@@ -120,6 +124,7 @@
   let availableProjects = [];
   const select = document.getElementById("projectSelect");
   const playBtn = document.getElementById("playBtn");
+  const rewindBtn = document.getElementById("rewindBtn");
   const status = document.getElementById("status");
 
   window.addEventListener('DOMContentLoaded', () => {
@@ -179,7 +184,9 @@
     document.getElementById("tempoSlider").value = currentTempoRatio;
     document.getElementById("tempoLabel").innerText = `${Math.round(currentTempoRatio * 100)}%`;
     tracks.forEach(t => {
-      if (t.player) t.player.playbackRate = currentTempoRatio;
+      if (t.player) {
+        t.player.playbackRate = currentTempoRatio;
+      }
     });
   }
 
@@ -193,6 +200,7 @@
     playStartRealTime = 0;
     playBtn.innerText = "▶";
     playBtn.disabled = true;
+    rewindBtn.disabled = true;
     document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
     document.getElementById("progress").style.width = "0%";
     
@@ -301,6 +309,7 @@
 
     status.innerText = "Prêt à la lecture";
     playBtn.disabled = false;
+    rewindBtn.disabled = false;
   }
 
   function playAll(offset = 0) {
@@ -331,7 +340,6 @@
     if (typeof Tone !== 'undefined') await Tone.start();
 
     if (isPlaying) {
-      // Calcul propre du temps écoulé sans utiliser de propriétés internes privées
       const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
       pauseOffset = Math.min(duration, pauseOffset + elapsed);
       stopAllSources();
@@ -344,26 +352,63 @@
     }
   };
 
+  rewindBtn.onclick = () => {
+    stopAllSources();
+    isPlaying = false;
+    pauseOffset = 0;
+    playBtn.innerText = "▶";
+    status.innerText = "Retour au début";
+    document.getElementById("progress").style.width = "0%";
+    document.getElementById("timeDisplay").innerText = `00:00 / ${formatTime(duration)}`;
+  };
+
+  // Gestion de la timeline interactive (glisser-déposer / scrubbing)
+  const timeline = document.getElementById("timeline");
+  let isDragging = false;
+
+  function getTimeFromEvent(e) {
+    const rect = timeline.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    return pos * duration;
+  }
+
+  timeline.onmousedown = (e) => {
+    if (duration <= 0) return;
+    isDragging = true;
+    const targetTime = getTimeFromEvent(e);
+    updateTimelineUI(targetTime);
+  };
+
+  window.onmousemove = (e) => {
+    if (!isDragging || duration <= 0) return;
+    const targetTime = getTimeFromEvent(e);
+    updateTimelineUI(targetTime);
+  };
+
+  window.onmouseup = (e) => {
+    if (!isDragging) return;
+    isDragging = false;
+    const targetTime = getTimeFromEvent(e);
+    pauseOffset = targetTime;
+    if (isPlaying) {
+      playAll(targetTime);
+    }
+  };
+
+  function updateTimelineUI(cur) {
+    document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
+    document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
+  }
+
   setInterval(() => {
-    if (isPlaying && duration > 0) {
+    if (isPlaying && duration > 0 && !isDragging) {
       const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
       const cur = Math.min(duration, pauseOffset + elapsed);
-      document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
-      document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
+      updateTimelineUI(cur);
       if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; status.innerText = "Terminé"; }
     }
   }, 100);
-
-  document.getElementById("timeline").onclick = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const targetTime = ((e.clientX - rect.left) / rect.width) * duration;
-    pauseOffset = targetTime;
-    if (isPlaying) playAll(targetTime);
-    else {
-      document.getElementById("progress").style.width = `${(targetTime / duration) * 100}%`;
-      document.getElementById("timeDisplay").innerText = `${formatTime(targetTime)} / ${formatTime(duration)}`;
-    }
-  };
 
   function setVolume(i, v) { tracks[i].baseVol = parseFloat(v); updateMix(); }
   function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
