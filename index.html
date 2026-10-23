@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v36)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v37)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -17,7 +17,7 @@
     select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 1rem; outline: none; cursor: pointer; }
     select option { background-color: #131b2e; color: #ffffff; }
     
-    .control-group { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-dim); }
+    .control-group { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-dim); }
     .btn-step { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text); width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
     .btn-step:hover { background: rgba(255,255,255,0.2); }
     .btn-reset { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
@@ -54,7 +54,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v36</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v37</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- 1. Choisir un morceau -->
@@ -97,18 +97,18 @@
         <button class="btn-reset" onclick="resetPitch()">RESET</button>
       </div>
 
-      <!-- 3. Tempo -->
+      <!-- 3. Tempo élargi avec pas de 0.01 (1%) -->
       <div class="control-group">
         <span>Tempo :</span>
-        <input type="range" id="tempoSlider" min="0.3" max="3.0" step="0.05" value="1.0" oninput="changeTempo(this.value)" style="width: 80px;">
-        <span id="tempoLabel" style="min-width: 42px; font-weight: bold; color: var(--primary);">100%</span>
+        <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 130px;">
+        <span id="tempoLabel" style="min-width: 45px; font-weight: bold; color: var(--primary);">100%</span>
         <button class="btn-reset" onclick="resetTempo()">RESET</button>
       </div>
 
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v36)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v37)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -200,6 +200,8 @@
     tracks.forEach(t => {
       if (t.player) {
         t.player.playbackRate = currentTempoRatio;
+        // Ajustement dynamique de la taille des grains pour éviter l'écho à bas tempo
+        t.player.grainSize = Math.max(0.05, 0.2 * currentTempoRatio);
       }
     });
   }
@@ -274,7 +276,6 @@
       }
 
       if (loadedBuffer) {
-        // Moteur identique à la v30 (grainSize: 0.2 et overlap: 0.1 par défaut)
         let player = new Tone.GrainPlayer({
           url: loadedBuffer,
           grainSize: 0.2,
