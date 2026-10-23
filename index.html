@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lecteur Multipiste - Raise You Up!</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -17,10 +18,17 @@
 
     .container { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 20px; display: none; }
     header, .player-card, .track-row { background: var(--card); border-radius: 12px; padding: 20px; }
-    header { display: flex; justify-content: space-between; align-items: center; }
+    header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
     h1 { font-size: 1.2rem; }
     select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 1rem; outline: none; cursor: pointer; }
     select option { background-color: #131b2e; color: #ffffff; }
+    
+    .control-group { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-dim); }
+    .btn-step { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text); width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    .btn-step:hover { background: rgba(255,255,255,0.2); }
+    .btn-reset { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-reset:hover { background: var(--primary); color: #000; }
+
     .player-card { display: flex; flex-direction: column; gap: 15px; }
     .controls-row { display: flex; align-items: center; gap: 20px; }
     .play-btn { width: 50px; height: 50px; border-radius: 50%; background: var(--primary); color: #000; border: none; font-size: 1.3rem; cursor: pointer; }
@@ -55,9 +63,56 @@
 <div class="container" id="mainApp">
   <header>
     <h1>🎛️ Morceaux Raise You Up!</h1>
-    <select id="projectSelect" onchange="switchProject(this.value)">
-      <option value="">-- Choisir un morceau --</option>
-    </select>
+    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+      
+      <!-- Tonalité : Boutons - / + et Reset -->
+      <div class="control-group">
+        <span>Tonalité :</span>
+        <button class="btn-step" onclick="stepPitch(-1)">-</button>
+        <select id="pitchSelect" onchange="changePitch(this.value)">
+          <option value="-12">-12 (-1 oct.)</option>
+          <option value="-11">-11</option>
+          <option value="-10">-10</option>
+          <option value="-9">-9</option>
+          <option value="-8">-8</option>
+          <option value="-7">-7</option>
+          <option value="-6">-6</option>
+          <option value="-5">-5</option>
+          <option value="-4">-4</option>
+          <option value="-3">-3</option>
+          <option value="-2">-2</option>
+          <option value="-1">-1</option>
+          <option value="0" selected>Original (0)</option>
+          <option value="1">+1</option>
+          <option value="2">+2</option>
+          <option value="3">+3</option>
+          <option value="4">+4</option>
+          <option value="5">+5</option>
+          <option value="6">+6</option>
+          <option value="7">+7</option>
+          <option value="8">+8</option>
+          <option value="9">+9</option>
+          <option value="10">+10</option>
+          <option value="11">+11</option>
+          <option value="12">+12 (+1 oct.)</option>
+        </select>
+        <button class="btn-step" onclick="stepPitch(1)">+</button>
+        <button class="btn-reset" onclick="resetPitch()">RESET</button>
+      </div>
+
+      <!-- Tempo : Fader et Reset -->
+      <div class="control-group">
+        <span>Tempo :</span>
+        <input type="range" id="tempoSlider" min="0.3" max="3.0" step="0.05" value="1.0" oninput="changeTempo(this.value)" style="width: 80px;">
+        <span id="tempoLabel" style="min-width: 42px; font-weight: bold; color: var(--primary);">100%</span>
+        <button class="btn-reset" onclick="resetTempo()">RESET</button>
+      </div>
+
+      <select id="projectSelect" onchange="switchProject(this.value)">
+        <option value="">-- Choisir un morceau --</option>
+      </select>
+
+    </div>
   </header>
   <div class="player-card">
     <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste...</div>
@@ -73,10 +128,7 @@
 </div>
 
 <script>
-  // ==========================================
-  // MOT DE PASSE ACCÈS :
   const CORRECT_PASSWORD = "RaiseYouUp!2026"; 
-  // ==========================================
 
   function checkPassword() {
     const input = document.getElementById("passwordInput").value;
@@ -122,147 +174,30 @@
     }
   }
 
-  const AudioContext = window.AudioContext || window.webkitAudioContext;
-  let audioCtx = null;
-  let tracks = [], isPlaying = false, startTime = 0, pauseOffset = 0, duration = 0;
+  let tracks = [], isPlaying = false, pauseOffset = 0, duration = 0;
+  let currentPitchSemitones = 0;
+  let currentTempoRatio = 1.0;
+  let pitchShiftNode = null;
 
-  async function switchProject(idx) {
-    if (idx === "") return;
-    stopAllSources();
-    isPlaying = false;
-    pauseOffset = 0;
-    playBtn.innerText = "▶";
-    playBtn.disabled = true;
-    document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
-    document.getElementById("progress").style.width = "0%";
-    
-    const proj = availableProjects[idx];
-    status.innerText = "Chargement des pistes...";
-
-    if (!audioCtx) audioCtx = new AudioContext();
-    tracks = [];
-    const listContainer = document.getElementById("tracksList");
-    listContainer.innerHTML = "";
-
-    duration = 0;
-    let loaded = 0;
-
-    for (let i = 0; i < proj.tracks.length; i++) {
-      const trackName = proj.tracks[i].replace(/\.[^/.]+$/, "");
-      const url = `${proj.folder}/${proj.tracks[i]}`;
-      
-      try {
-        const res = await fetch(url);
-        const buf = await res.arrayBuffer();
-        const decoded = await audioCtx.decodeAudioData(buf);
-        if (decoded.duration > duration) duration = decoded.duration;
-
-        tracks.push({ name: trackName, buffer: decoded, baseVol: 1, pre: false, solo: false, mute: false, source: null, gainNode: null });
-        loaded++;
-        status.innerText = `Chargement (${loaded}/${proj.tracks.length})...`;
-      } catch(e) {
-        console.error(e);
-      }
+  function changePitch(semitones) {
+    currentPitchSemitones = parseInt(semitones, 10);
+    document.getElementById("pitchSelect").value = currentPitchSemitones;
+    if (pitchShiftNode) {
+      pitchShiftNode.pitch = currentPitchSemitones;
     }
-
-    tracks.forEach((t, i) => {
-      const row = document.createElement("div");
-      row.className = "track-row";
-      row.innerHTML = `
-        <div class="track-name">${t.name}</div>
-        <input type="range" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
-        <div class="btn-group">
-          <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})">PRE</button>
-          <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})">S</button>
-          <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})">M</button>
-        </div>
-      `;
-      listContainer.appendChild(row);
-    });
-
-    status.innerText = "Prêt à la lecture";
-    playBtn.disabled = false;
   }
 
-  function playAll(offset = 0) {
-    stopAllSources();
-    const startAt = audioCtx.currentTime + 0.05;
-    tracks.forEach(t => {
-      t.gainNode = audioCtx.createGain();
-      t.gainNode.connect(audioCtx.destination);
-      t.source = audioCtx.createBufferSource();
-      t.source.buffer = t.buffer;
-      t.source.connect(t.gainNode);
-      t.source.start(startAt, offset);
-    });
-    startTime = startAt - offset;
-    updateMix();
-    isPlaying = true;
-    playBtn.innerText = "⏸";
-    status.innerText = "Lecture en cours...";
+  function stepPitch(delta) {
+    let newVal = currentPitchSemitones + delta;
+    if (newVal < -12) newVal = -12;
+    if (newVal > 12) newVal = 12;
+    changePitch(newVal);
   }
 
-  function stopAllSources() {
-    tracks.forEach(t => {
-      if (t.source) { try { t.source.stop(); } catch(e){} t.source.disconnect(); t.source = null; }
-    });
+  function resetPitch() {
+    changePitch(0);
   }
 
-  playBtn.onclick = async () => {
-    if (isPlaying) {
-      pauseOffset = (audioCtx.currentTime - startTime);
-      stopAllSources();
-      isPlaying = false;
-      playBtn.innerText = "▶";
-      status.innerText = "En pause";
-    } else {
-      if (audioCtx.state === 'suspended') await audioCtx.resume();
-      playAll(pauseOffset);
-    }
-  };
-
-  setInterval(() => {
-    if (isPlaying && duration > 0) {
-      const cur = Math.min(duration, audioCtx.currentTime - startTime);
-      document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
-      document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
-      if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; }
-    }
-  }, 100);
-
-  document.getElementById("timeline").onclick = (e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const targetTime = ((e.clientX - rect.left) / rect.width) * duration;
-    pauseOffset = targetTime;
-    if (isPlaying) playAll(targetTime);
-    else {
-      document.getElementById("progress").style.width = `${(targetTime / duration) * 100}%`;
-      document.getElementById("timeDisplay").innerText = `${formatTime(targetTime)} / ${formatTime(duration)}`;
-    }
-  };
-
-  function setVolume(i, v) { tracks[i].baseVol = parseFloat(v); updateMix(); }
-  function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
-  function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
-  function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
-
-  function updateMix() {
-    const hasSolo = tracks.some(t => t.solo);
-    const hasPre = tracks.some(t => t.pre);
-    tracks.forEach(t => {
-      if (!t.gainNode) return;
-      let v = t.baseVol;
-      if (t.mute) v = 0;
-      else if (hasSolo) v = t.solo ? t.baseVol : 0;
-      else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
-      t.gainNode.gain.setTargetAtTime(Math.max(0, Math.min(1, v)), audioCtx.currentTime, 0.01);
-    });
-  }
-
-  function formatTime(s) {
-    const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
-    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  }
-</script>
-</body>
-</html>
+  function changeTempo(val) {
+    currentTempoRatio = parseFloat(val);
+    document.getElementById("tempoSlider").
