@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v48)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v49)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -16,7 +16,9 @@
     /* Header en 2 lignes distinctes */
     header { display: flex; flex-direction: column; align-items: center; gap: 15px; }
     .header-title-row { width: 100%; display: flex; justify-content: center; align-items: center; }
-    h1 { font-size: 1.15rem; text-align: center; }
+    
+    /* Titre agrandi pour le groupe de Gospel */
+    h1 { font-size: 1.8rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
     .header-controls-row { width: 100%; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; }
     
@@ -56,19 +58,19 @@
     .btn-track.active-solo { background: #eccc68; color: #000; }
     .btn-track.active-mute { background: var(--accent); color: #fff; }
     
-    .version-badge { font-size: 0.75rem; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 6px; display: inline-block; }
+    .version-badge { font-size: 0.75rem; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block; font-weight: normal; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <header>
-    <!-- Ligne 1 : Titre centré -->
+    <!-- Ligne 1 : Titre centré et agrandi -->
     <div class="header-title-row">
-      <h1>🎛️ Raise You Up! <span class="version-badge">v48</span></h1>
+      <h1>🎤 Raise You Up! <span class="version-badge">v49</span></h1>
     </div>
 
-    <!-- Ligne 2 : Liste des morceaux, Tonalité, Tempo (avec retour intelligent si besoin) -->
+    <!-- Ligne 2 : Liste des morceaux, Tonalité, Tempo -->
     <div class="header-controls-row">
       <!-- 1. Choisir un morceau -->
       <select id="projectSelect" onchange="switchProject(this.value)">
@@ -122,7 +124,7 @@
   </header>
 
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v48)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v49)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
