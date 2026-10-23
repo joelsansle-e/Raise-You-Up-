@@ -120,7 +120,6 @@
   const playBtn = document.getElementById("playBtn");
   const status = document.getElementById("status");
 
-  // Chargement direct de la playlist au démarrage
   window.addEventListener('DOMContentLoaded', () => {
     loadPlaylist();
   });
@@ -213,11 +212,9 @@
       const trackName = fileName.replace(/\.[^/.]+$/, "");
       const url = `${proj.folder}/${fileName}`;
       try {
-        const buffer = new Tone.ToneAudioBuffer();
-        await buffer.load(url);
-        
-        const player = new Tone.Player(buffer);
+        const player = new Tone.Player();
         player.playbackRate = currentTempoRatio;
+        await player.load(url);
 
         const volumeNode = new Tone.Volume(0);
         player.connect(volumeNode);
@@ -227,7 +224,7 @@
           volumeNode.toDestination();
         }
 
-        if (buffer.duration > duration) duration = buffer.duration;
+        if (player.buffer.duration > duration) duration = player.buffer.duration;
         loaded++;
         status.innerText = `Chargement (${loaded}/${proj.tracks.length})...`;
 
