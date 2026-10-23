@@ -155,17 +155,12 @@
   let currentTempoRatio = 1.0;
   let pitchShiftNode = null;
 
-  function getPitchRate() {
-    return Math.pow(2, currentPitchSemitones / 12);
-  }
-
   function changePitch(semitones) {
     currentPitchSemitones = parseInt(semitones, 10);
     document.getElementById("pitchSelect").value = currentPitchSemitones;
     if (pitchShiftNode) {
       pitchShiftNode.pitch = currentPitchSemitones;
     }
-    updatePlaybackRates();
   }
 
   function stepPitch(delta) {
@@ -181,21 +176,12 @@
     currentTempoRatio = parseFloat(val);
     document.getElementById("tempoSlider").value = currentTempoRatio;
     document.getElementById("tempoLabel").innerText = `${Math.round(currentTempoRatio * 100)}%`;
-    updatePlaybackRates();
+    tracks.forEach(t => {
+      if (t.source) t.source.playbackRate.value = currentTempoRatio;
+    });
   }
 
   function resetTempo() { changeTempo(1.0); }
-
-  function updatePlaybackRates() {
-    tracks.forEach(t => {
-      if (t.source) {
-        t.source.playbackRate.value = currentTempoRatio;
-      }
-    });
-    if (pitchShiftNode) {
-      pitchShiftNode.pitch = currentPitchSemitones;
-    }
-  }
 
   async function switchProject(idx) {
     if (idx === "") return;
@@ -213,9 +199,11 @@
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     if (audioCtx.state === 'suspended') await audioCtx.resume();
 
-    if (typeof Tone !== 'undefined' && !pitchShiftNode) {
+    if (typeof Tone !== 'undefined') {
       await Tone.start();
-      pitchShiftNode = new Tone.PitchShift({ pitch: currentPitchSemitones }).toDestination();
+      if (!pitchShiftNode) {
+        pitchShiftNode = new Tone.PitchShift({ pitch: currentPitchSemitones }).toDestination();
+      }
     }
 
     tracks = [];
@@ -239,14 +227,21 @@
         loaded++;
         status.innerText = `Chargement (${loaded}/${trackFiles.length})...`;
 
+        const gainNode = audioCtx.createGain();
+        if (pitchShiftNode) {
+          gainNode.connect(pitchShiftNode);
+        } else {
+          gainNode.connect(audioCtx.destination);
+        }
+
         return {
           name: trackName,
           buffer: decodedBuffer,
+          gainNode: gainNode,
           baseVol: 1,
           pre: false,
           solo: false,
           mute: false,
-          gainNode: null,
           source: null
         };
       } catch (e) {
@@ -281,16 +276,10 @@
 
   function playAll(offset = 0) {
     stopAllSources();
+    if (!audioCtx) return;
     const startAt = audioCtx.currentTime + 0.05;
 
     tracks.forEach(t => {
-      t.gainNode = audioCtx.createGain();
-      if (pitchShiftNode) {
-        t.gainNode.connect(pitchShiftNode);
-      } else {
-        t.gainNode.connect(audioCtx.destination);
-      }
-
       t.source = audioCtx.createBufferSource();
       t.source.buffer = t.buffer;
       t.source.playbackRate.value = currentTempoRatio;
@@ -332,7 +321,7 @@
   };
 
   setInterval(() => {
-    if (isPlaying && duration > 0) {
+    if (isPlaying && duration > 0 && audioCtx) {
       const cur = Math.min(duration, (audioCtx.currentTime - startTime) * currentTempoRatio);
       document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
       document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
@@ -360,13 +349,12 @@
     const hasSolo = tracks.some(t => t.solo);
     const hasPre = tracks.some(t => t.pre);
     tracks.forEach(t => {
-      if (!t.gainNode) return;
+      if (!t.gainNode || !audioCtx) return;
       let v = t.baseVol;
       if (t.mute) v = 0;
       else if (hasSolo) v = t.solo ? t.baseVol : 0;
       else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
       
-      const db = v === 0 ? -Infinity : 20 * Math.log10(Math.max(0.0001, v));
       t.gainNode.gain.setTargetAtTime(Math.max(0, Math.min(1, v)), audioCtx.currentTime, 0.01);
     });
   }
