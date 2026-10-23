@@ -32,11 +32,11 @@ jobs:
               const playlist = folders.map(folder => {
                 const files = fs.readdirSync(folder).filter(f => f.toLowerCase().endsWith(".mp3") || f.toLowerCase().endsWith(".wav"));
                 
-                // Nettoie le titre pour enlever les crochets (ex: "Everything_Hallelujah_[Eb]" -> "Everything Hallelujah")
-                let cleanTitle = folder.replace(/\[.*?\]/g, "").replace(/_/g, " ").trim();
+                // Nettoie le titre : coupe tout ce qui se trouve après les deux underscores pour le menu
+                let cleanTitle = folder.split("__")[0].replace(/_/g, " ").trim();
                 
-                // Extrait la tonalité automatiquement
-                let match = folder.match(/\[([A-G][b\#]?m?)\]/i);
+                // Extrait la tonalité située après les deux underscores (__Eb ou __Key-Eb)
+                let match = folder.match(/__(?:Key-)?([A-G][b\#]?m?)/i);
                 let key = match ? match[1] : null;
 
                 return {
