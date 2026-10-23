@@ -3,62 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v49)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v52)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
     
-    .container { width: 100%; max-width: 1050px; display: flex; flex-direction: column; gap: 20px; }
-    header, .player-card, .track-row { background: var(--card); border-radius: 12px; padding: 20px; }
+    body { 
+      background-color: var(--bg); 
+      color: var(--text); 
+      padding: 10px; 
+      min-height: 100vh; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      overflow-x: hidden;
+    }
+    
+    .container { 
+      width: 100%; 
+      max-width: 1050px; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 15px; 
+      margin: 0 auto;
+    }
+
+    header, .player-card, .track-row { 
+      background: var(--card); 
+      border-radius: 12px; 
+      padding: 15px; 
+      width: 100%; 
+    }
     
     /* Header en 2 lignes distinctes */
     header { display: flex; flex-direction: column; align-items: center; gap: 15px; }
     .header-title-row { width: 100%; display: flex; justify-content: center; align-items: center; }
     
-    /* Titre agrandi pour le groupe de Gospel */
-    h1 { font-size: 1.8rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
+    h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
-    .header-controls-row { width: 100%; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 15px; }
+    .header-controls-row { width: 100%; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; }
     
-    select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; cursor: pointer; }
+    select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; cursor: pointer; max-width: 100%; }
     select option { background-color: #131b2e; color: #ffffff; }
     
-    .control-group { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-dim); white-space: nowrap; }
+    .control-group { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-dim); flex-wrap: wrap; justify-content: center; }
     .btn-step { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text); width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
     .btn-step:hover { background: rgba(255,255,255,0.2); }
     .btn-reset { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
     .btn-reset:hover { background: var(--primary); color: #000; }
 
     .player-card { display: flex; flex-direction: column; gap: 15px; }
-    .controls-row { display: flex; align-items: center; gap: 15px; }
-    .play-btn, .rewind-btn { width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid rgba(255,255,255,0.2); font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    .controls-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
+    .play-btn, .rewind-btn { width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid rgba(255,255,255,0.2); font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
     .play-btn { background: var(--primary); color: #000; border: none; font-size: 1.3rem; }
     .play-btn:disabled, .rewind-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .rewind-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
     
-    .time-display { font-family: monospace; color: var(--primary); min-width: 110px; text-align: center; }
-    .timeline { flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; cursor: pointer; }
+    .time-display { font-family: monospace; color: var(--primary); min-width: 100px; text-align: center; font-size: 0.9rem; }
+    .timeline { flex: 1; min-width: 140px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; cursor: pointer; }
     .timeline-progress { height: 100%; background: var(--primary); border-radius: 4px; width: 0%; pointer-events: none; }
-    .tracks-list { display: flex; flex-direction: column; gap: 10px; }
+    .tracks-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     
-    .track-row { display: flex; align-items: center; gap: 15px; padding: 14px 20px; flex-wrap: wrap; }
-    .track-name { flex: 1 1 200px; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
-    .track-controls { display: flex; align-items: center; gap: 10px; flex: 2 1 340px; }
+    /* Pistes adaptatives pour mobile */
+    .track-row { display: flex; flex-direction: column; gap: 12px; padding: 15px; }
+    .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
+    .track-controls { width: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
     
-    input[type=range] { -webkit-appearance: none; flex: 1; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+    input[type=range] { -webkit-appearance: none; flex: 1; min-width: 90px; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); cursor: pointer; }
     
     .vol-label { font-family: monospace; font-size: 0.85rem; color: var(--primary); min-width: 38px; text-align: right; }
 
-    .btn-group { display: flex; gap: 5px; }
-    .btn-track { padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-group { display: flex; gap: 6px; }
+    .btn-track { padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
     .btn-track.active-pre { background: var(--primary); color: #000; }
     .btn-track.active-solo { background: #eccc68; color: #000; }
     .btn-track.active-mute { background: var(--accent); color: #fff; }
     
     .version-badge { font-size: 0.75rem; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block; font-weight: normal; }
+
+    /* Ajustement grand écran pour garder les pistes en ligne si la place le permet */
+    @media (min-width: 768px) {
+      body { padding: 20px; }
+      .track-row { flex-direction: row; align-items: center; justify-content: space-between; }
+      .track-name { flex: 1 1 200px; width: auto; }
+      .track-controls { flex: 2 1 400px; width: auto; flex-wrap: nowrap; }
+    }
   </style>
 </head>
 <body>
@@ -67,7 +98,7 @@
   <header>
     <!-- Ligne 1 : Titre centré et agrandi -->
     <div class="header-title-row">
-      <h1>🎤 Raise You Up! <span class="version-badge">v49</span></h1>
+      <h1>🎤 Raise You Up! <span class="version-badge">v52</span></h1>
     </div>
 
     <!-- Ligne 2 : Liste des morceaux, Tonalité, Tempo -->
@@ -116,15 +147,15 @@
       <!-- 3. Tempo -->
       <div class="control-group">
         <span>Tempo :</span>
-        <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 100px;">
-        <span id="tempoLabel" style="min-width: 42px; font-weight: bold; color: var(--primary);">100%</span>
+        <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
+        <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
         <button class="btn-reset" onclick="resetTempo()">RESET</button>
       </div>
     </div>
   </header>
 
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v49)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v52)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
