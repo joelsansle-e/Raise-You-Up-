@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v53)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v56)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -20,12 +20,57 @@
       overflow-x: hidden;
     }
     
-    .container { 
-      width: 100%; 
-      max-width: 1050px; 
-      display: flex; 
-      flex-direction: column; 
-      gap: 15px; 
+    #lockScreen {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .lock-card {
+      background: var(--card);
+      padding: 30px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .lock-card input {
+      background: #0b0f19;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      text-align: center;
+    }
+    .lock-card button {
+      background: var(--primary);
+      color: #000;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .lock-card button:hover { opacity: 0.9; }
+    #lockError { color: var(--accent); font-size: 0.85rem; display: none; }
+
+    #appContent {
+      display: none;
+      width: 100%;
+      max-width: 1050px;
+      flex-direction: column;
+      gap: 15px;
       margin: 0 auto;
     }
 
@@ -91,10 +136,20 @@
 </head>
 <body>
 
-<div class="container">
+<div id="lockScreen">
+  <div class="lock-card">
+    <h2>🎤 Raise You Up!</h2>
+    <p style="font-size: 0.9rem; color: var(--text-dim);">Accès réservé. Veuillez entrer le mot de passe :</p>
+    <input type="password" id="passwordInput" placeholder="Mot de passe" autofocus>
+    <button onclick="checkPassword()">Valider</button>
+    <div id="lockError">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<div id="appContent">
   <header>
     <div class="header-title-row">
-      <h1>🎤 Raise You Up! <span class="version-badge">v53</span></h1>
+      <h1>🎤 Raise You Up! <span class="version-badge">v56</span></h1>
     </div>
 
     <div class="header-controls-row">
@@ -147,7 +202,7 @@
   </header>
 
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v53)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v56)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -161,6 +216,51 @@
 </div>
 
 <script>
+  const configToken = "01a4e1cf68fb8d023f03acbe14ebf2e37943aa5c3e7bfa58a436df7a0dcd9bc5";
+
+  async function sha256(message) {
+    const msgBuffer = new TextEncoder().encode(message);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  async function checkPassword() {
+    const pwd = document.getElementById("passwordInput").value;
+    const hash = await sha256(pwd);
+    if (hash === configToken) {
+      document.getElementById("lockScreen").style.display = "none";
+      document.getElementById("appContent").style.display = "flex";
+      loadPlaylist();
+    } else {
+      document.getElementById("lockError").style.display = "block";
+    }
+  }
+
+  document.getElementById("passwordInput").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") checkPassword();
+  });
+
+  document.addEventListener('contextmenu', event => event.preventDefault());
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
+      e.preventDefault();
+      return false;
+    }
+  });
+
+  // Fonction utilitaire pour décoder automatiquement le Base64 (obfuscation)
+  function decodeBase64(str) {
+    if (!str) return '';
+    try {
+      // Vérifie si la chaîne ressemble à du Base64 valide et la décode
+      return decodeURIComponent(escape(window.atob(str)));
+    } catch (e) {
+      // Si ce n'est pas du Base64 (texte en clair par défaut), on retourne la chaîne telle quelle
+      return str;
+    }
+  }
+
   let availableProjects = [];
   let currentProjectOriginalKey = "";
   const select = document.getElementById("projectSelect");
@@ -171,10 +271,6 @@
   const chromaticNotes = [
     'C', 'Db / C#', 'D', 'Eb / D#', 'E', 'F', 'Gb / F#', 'G', 'Ab / G#', 'A', 'Bb / A#', 'B'
   ];
-
-  window.addEventListener('DOMContentLoaded', () => {
-    loadPlaylist();
-  });
 
   window.addEventListener('keydown', (e) => {
     if (e.code === 'Space' || e.key === ' ') {
@@ -200,7 +296,9 @@
         availableProjects.forEach((p, idx) => {
           let opt = document.createElement("option");
           opt.value = idx;
-          opt.innerText = p.title || p.name || p.folder || `Morceau ${idx + 1}`;
+          // Décodage optionnel du titre ou nom de dossier si encodé
+          let decodedTitle = decodeBase64(p.title || p.name || p.folder || `Morceau ${idx + 1}`);
+          opt.innerText = decodedTitle;
           select.appendChild(opt);
         });
         status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
@@ -288,7 +386,6 @@
 
   async function switchProject(idx) {
     if (idx === "") {
-      // Remise à zéro complète
       stopAllSources();
       isPlaying = false;
       pauseOffset = 0;
@@ -323,9 +420,13 @@
     
     const proj = availableProjects[idx];
     
+    // Décodage du dossier source (gère le Base64 ou le texte en clair)
+    let rawFolder = proj.folder || proj.path || '';
+    let folderName = decodeBase64(rawFolder);
+
     let detectedKey = proj.key || proj.originalKey || "";
     if (!detectedKey) {
-      let textSource = proj.folder || proj.title || "";
+      let textSource = folderName || proj.title || "";
       let match = textSource.match(/__(?:Key-)?([A-G][b\#]?m?)/i) || textSource.match(/\[([A-G][b\#]?m?)\]/i);
       if (match) {
         detectedKey = match[1];
@@ -348,7 +449,6 @@
 
     duration = 0;
     
-    const folderName = proj.folder || proj.path || '';
     const trackListObj = proj.tracks || proj.files || proj.items || [];
     let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
 
@@ -364,7 +464,8 @@
         rawFile = rawFile.name || rawFile.file || rawFile.filename || '';
       }
       
-      let filePath = String(rawFile).trim();
+      // Décodage du nom de fichier (Base64 ou texte en clair)
+      let filePath = decodeBase64(String(rawFile).trim());
       const fileNameOnly = filePath.split('/').pop();
       const trackName = fileNameOnly.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
       
