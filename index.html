@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v15)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v16)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -51,7 +51,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v15</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v16</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -104,7 +104,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v15)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v16)</div>
     <div class="controls-row">
       <button class="play-btn" id="playBtn" disabled>▶</button>
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
@@ -129,7 +129,7 @@
   async function loadPlaylist() {
     try {
       const res = await fetch('./playlist.json?v=' + new Date().getTime());
-      if (!res.ok) throw new Error("Fichier non trouvé");
+      if (!res.ok) throw new Error("Fichier playlist.json non trouvé");
       const data = await res.json();
       availableProjects = Array.isArray(data) ? data : (data.projects || []);
       
@@ -221,20 +221,28 @@
     let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
 
     if (trackFiles.length === 0) {
-      status.innerText = "Aucune piste trouvée pour ce morceau.";
+      status.innerText = "Aucune piste trouvée pour ce morceau dans playlist.json.";
       return;
     }
 
     let loaded = 0;
+    let lastErrorUrl = "";
+
     for (let i = 0; i < trackFiles.length; i++) {
       const fileName = trackFiles[i];
       const trackName = fileName.replace(/\.[^/.]+$/, "");
       const folder = proj.folder || proj.path || '';
-      const url = folder ? `${folder}/${fileName}` : fileName;
+      
+      // Encodage propre du chemin pour gérer les espaces et caractères spéciaux
+      const cleanFolder = folder.trim().replace(/\/$/, "");
+      const url = cleanFolder ? `${cleanFolder}/${encodeURIComponent(fileName)}` : encodeURIComponent(fileName);
 
       try {
         const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          lastErrorUrl = url;
+          throw new Error(`HTTP ${response.status} sur ${url}`);
+        }
         const arrayBuffer = await response.arrayBuffer();
         const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
@@ -265,7 +273,7 @@
     }
 
     if (tracks.length === 0) {
-      status.innerText = "Erreur : impossible de charger les fichiers audio.";
+      status.innerText = `Erreur 404 : impossible d'ouvrir "${lastErrorUrl}". Vérifiez le nom du dossier et des fichiers.`;
       return;
     }
 
