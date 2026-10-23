@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v41)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v42)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -13,12 +13,15 @@
     .container { width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 20px; }
     header, .player-card, .track-row { background: var(--card); border-radius: 12px; padding: 20px; }
     header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
-    h1 { font-size: 1.2rem; }
-    select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 1rem; outline: none; cursor: pointer; }
+    h1 { font-size: 1.1rem; white-space: nowrap; }
+    
+    .header-controls { display: flex; align-items: center; gap: 15px; flex-wrap: wrap; }
+    
+    select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 6px 10px; border-radius: 8px; font-size: 0.9rem; outline: none; cursor: pointer; }
     select option { background-color: #131b2e; color: #ffffff; }
     
-    .control-group { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-dim); }
-    .btn-step { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text); width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+    .control-group { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--text-dim); }
+    .btn-step { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text); width: 26px; height: 26px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
     .btn-step:hover { background: rgba(255,255,255,0.2); }
     .btn-reset { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
     .btn-reset:hover { background: var(--primary); color: #000; }
@@ -50,27 +53,27 @@
     .btn-track.active-solo { background: #eccc68; color: #000; }
     .btn-track.active-mute { background: var(--accent); color: #fff; }
     
-    .version-badge { font-size: 0.75rem; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 10px; display: inline-block; }
+    .version-badge { font-size: 0.75rem; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 6px; display: inline-block; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v41</span></h1>
-    <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+    <h1>🎛️ Raise You Up! <span class="version-badge">v42</span></h1>
+    <div class="header-controls">
       
       <!-- 1. Choisir un morceau -->
       <select id="projectSelect" onchange="switchProject(this.value)">
-        <option value="">-- Choisir un morceau --</option>
+        <option value="">-- Morceau --</option>
       </select>
 
       <!-- 2. Tonalité & Affichage dynamique double -->
       <div class="control-group">
-        <span>Tonalité :</span>
+        <span>Tona :</span>
         <button class="btn-step" onclick="stepPitch(-1)">-</button>
         <select id="pitchSelect" onchange="changePitch(this.value)">
-          <option value="-12">-12 (-1 oct.)</option>
+          <option value="-12">-12</option>
           <option value="-11">-11</option>
           <option value="-10">-10</option>
           <option value="-9">-9</option>
@@ -82,7 +85,7 @@
           <option value="-3">-3</option>
           <option value="-2">-2</option>
           <option value="-1">-1</option>
-          <option value="0" selected>Original (0)</option>
+          <option value="0" selected>Orig (0)</option>
           <option value="1">+1</option>
           <option value="2">+2</option>
           <option value="3">+3</option>
@@ -94,25 +97,25 @@
           <option value="9">+9</option>
           <option value="10">+10</option>
           <option value="11">+11</option>
-          <option value="12">+12 (+1 oct.)</option>
+          <option value="12">+12</option>
         </select>
         <button class="btn-step" onclick="stepPitch(1)">+</button>
         <button class="btn-reset" onclick="resetPitch()">RESET</button>
-        <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); margin-left: 4px; min-width: 65px;"></span>
+        <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); min-width: 55px;"></span>
       </div>
 
       <!-- 3. Tempo -->
       <div class="control-group">
         <span>Tempo :</span>
-        <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 130px;">
-        <span id="tempoLabel" style="min-width: 45px; font-weight: bold; color: var(--primary);">100%</span>
+        <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 100px;">
+        <span id="tempoLabel" style="min-width: 38px; font-weight: bold; color: var(--primary);">100%</span>
         <button class="btn-reset" onclick="resetTempo()">RESET</button>
       </div>
 
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v41)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v42)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -160,7 +163,7 @@
       const data = await res.json();
       availableProjects = Array.isArray(data) ? data : (data.projects || [data]);
       
-      select.innerHTML = '<option value="">-- Choisir un morceau --</option>';
+      select.innerHTML = '<option value="">-- Morceau --</option>';
       if (availableProjects.length > 0) {
         availableProjects.forEach((p, idx) => {
           let opt = document.createElement("option");
@@ -168,9 +171,9 @@
           opt.innerText = p.title || p.name || p.folder || `Morceau ${idx + 1}`;
           select.appendChild(opt);
         });
-        status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
+        status.innerText = "Sélectionnez un morceau";
       } else {
-        status.innerText = "Aucun morceau trouvé dans la playlist.";
+        status.innerText = "Aucun morceau trouvé.";
       }
     } catch(err) {
       console.error(err);
@@ -252,7 +255,11 @@
   }
 
   async function switchProject(idx) {
-    if (idx === "") return;
+    if (idx === "") {
+      currentProjectOriginalKey = "";
+      updateDynamicKeyDisplay();
+      return;
+    }
     stopAllSources();
     isPlaying = false;
     pauseOffset = 0;
@@ -265,13 +272,11 @@
     
     const proj = availableProjects[idx];
     
-    // Détection automatique de la tonalité : 
-    // 1. Cherche dans proj.key ou proj.originalKey
-    // 2. Sinon, cherche entre crochets [ ] dans le nom du dossier ou du titre
+    // Détection automatique de la tonalité (prend en charge .key du JSON, le format __Eb ou les anciens crochets)
     let detectedKey = proj.key || proj.originalKey || "";
     if (!detectedKey) {
       let textSource = proj.folder || proj.title || "";
-      let match = textSource.match(/\[([A-G][b\#]?m?)\]/i);
+      let match = textSource.match(/__(?:Key-)?([A-G][b\#]?m?)/i) || textSource.match(/\[([A-G][b\#]?m?)\]/i);
       if (match) {
         detectedKey = match[1];
       }
@@ -281,7 +286,7 @@
     resetPitch();
     updateDynamicKeyDisplay();
 
-    status.innerText = "Chargement des pistes en cours...";
+    status.innerText = "Chargement des pistes...";
 
     if (typeof Tone !== 'undefined') {
       await Tone.start();
@@ -298,7 +303,7 @@
     let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
 
     if (trackFiles.length === 0) {
-      status.innerText = "Erreur : aucune piste trouvée dans ce projet.";
+      status.innerText = "Erreur : aucune piste trouvée.";
       return;
     }
 
@@ -359,7 +364,7 @@
     }
 
     if (tracks.length === 0) {
-      status.innerText = "Erreur de chargement des pistes audio (vérifiez la console).";
+      status.innerText = "Erreur de chargement audio.";
       return;
     }
 
@@ -373,9 +378,9 @@
           <button class="btn-reset" onclick="resetVolume(${i})">RESET</button>
           <span class="vol-label" id="vol-label-${i}">100%</span>
           <div class="btn-group">
-            <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})" title="Mettre en valeur cette piste avec le reste en fond">FOCUS</button>
-            <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})" title="Écouter uniquement cette piste">S</button>
-            <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})" title="Couper cette piste">M</button>
+            <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})" title="FOCUS">FOCUS</button>
+            <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})" title="Solo">S</button>
+            <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})" title="Mute">M</button>
           </div>
         </div>
       `;
@@ -400,7 +405,7 @@
     updateMix();
     isPlaying = true;
     playBtn.innerText = "⏸";
-    status.innerText = "Lecture en cours...";
+    status.innerText = "Lecture...";
   }
 
   function stopAllSources() {
@@ -434,7 +439,7 @@
     isPlaying = false;
     pauseOffset = 0;
     playBtn.innerText = "▶";
-    status.innerText = "Retour au début";
+    status.innerText = "Début";
     document.getElementById("progress").style.width = "0%";
     document.getElementById("timeDisplay").innerText = `00:00 / ${formatTime(duration)}`;
   };
@@ -459,7 +464,6 @@
   window.onmousemove = (e) => {
     if (!isDragging || duration <= 0) return;
     const targetTime = getTimeFromEvent(e);
-    updateTimelineUI(targetName); // (gardé intact via updateTimelineUI ci-dessous)
     updateTimelineUI(targetTime);
   };
 
