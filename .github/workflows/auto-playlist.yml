@@ -1,64 +1,66 @@
-name: Generate Playlist
+name: Générer la playlist automatique (Sécurisée Base64)
+
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Récupérer le code du dépôt
+        uses: actions/checkout@v4
 
-      - name: Generate playlist.json
+      - name: Configurer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Générer le playlist.json avec obfuscation Base64
         run: |
           node -e '
-            const fs = require("fs");
-            const path = require("path");
-            
-            try {
-              const isDir = d => {
-                try {
-                  return fs.statSync(d).isDirectory() && !d.startsWith(".") && d !== "node_modules";
-                } catch (e) {
-                  return false;
-                }
-              };
-              
-              const folders = fs.readdirSync(".").filter(isDir);
-              
-              const playlist = folders.map(folder => {
-                const files = fs.readdirSync(folder).filter(f => f.toLowerCase().endsWith(".mp3") || f.toLowerCase().endsWith(".wav"));
-                
-                // Nettoie le titre : coupe tout ce qui se trouve après les deux underscores pour le menu
-                let cleanTitle = folder.split("__")[0].replace(/_/g, " ").trim();
-                
-                // Extrait la tonalité située après les deux underscores (__Eb ou __Key-Eb)
-                let match = folder.match(/__(?:Key-)?([A-G][b\#]?m?)/i);
-                let key = match ? match[1] : null;
+          const fs = require("fs");
+          const path = require("path");
 
-                return {
-                  title: cleanTitle || folder.replace(/_/g, " "),
-                  folder: folder,
-                  key: key,
-                  tracks: files
-                };
-              }).filter(p => p.tracks.length > 0);
+          // Fonction pour encoder en Base64 de manière sécurisée (support UTF-8)
+          function toBase64(str) {
+            return Buffer.from(str, "utf8").toString("base64");
+          }
+
+          const ignoreDirs = [".github", ".git", "node_modules"];
+          const audioExtensions = [".mp3", ".wav", ".m4a", ".aac", ".ogg"];
+
+          let entries = fs.readdirSync(".", { withFileTypes: true });
+          let projects = [];
+
+          entries.forEach(entry => {
+            if (entry.isDirectory() && !ignoreDirs.includes(entry.name)) {
+              let folderName = entry.name;
+              let folderPath = path.join(".", folderName);
               
-              fs.writeFileSync("playlist.json", JSON.stringify(playlist, null, 2));
-              console.log("playlist.json généré avec succès !");
-            } catch (err) {
-              console.error("Erreur lors de la génération du JSON:", err);
-              process.exit(1);
+              let files = fs.readdirSync(folderPath).filter(file => {
+                return audioExtensions.includes(path.extname(file).toLowerCase());
+              }).sort();
+
+              if (files.length > 0) {
+                // Encodage automatique du dossier et des fichiers en Base64
+                projects.push({
+                  folder: toBase64(folderName),
+                  tracks: files.map(f => toBase64(f))
+                });
+              }
             }
+          });
+
+          fs.writeFileSync("playlist.json", JSON.stringify(projects, null, 2));
+          console.log("playlist.json généré et encodé en Base64 avec succès !");
           '
 
-      - name: Commit and Push playlist.json
+      - name: Publier les modifications sur le dépôt
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git add playlist.json
-          git commit -m "Auto-update playlist.json" || exit 0
-          git push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Mise à jour automatique de la playlist (Base64)" && git push)
