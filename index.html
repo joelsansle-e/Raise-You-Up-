@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v52)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v53)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -36,7 +36,6 @@
       width: 100%; 
     }
     
-    /* Header en 2 lignes distinctes */
     header { display: flex; flex-direction: column; align-items: center; gap: 15px; }
     .header-title-row { width: 100%; display: flex; justify-content: center; align-items: center; }
     
@@ -65,7 +64,6 @@
     .timeline-progress { height: 100%; background: var(--primary); border-radius: 4px; width: 0%; pointer-events: none; }
     .tracks-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     
-    /* Pistes adaptatives pour mobile */
     .track-row { display: flex; flex-direction: column; gap: 12px; padding: 15px; }
     .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
     .track-controls { width: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
@@ -83,7 +81,6 @@
     
     .version-badge { font-size: 0.75rem; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block; font-weight: normal; }
 
-    /* Ajustement grand écran pour garder les pistes en ligne si la place le permet */
     @media (min-width: 768px) {
       body { padding: 20px; }
       .track-row { flex-direction: row; align-items: center; justify-content: space-between; }
@@ -96,19 +93,15 @@
 
 <div class="container">
   <header>
-    <!-- Ligne 1 : Titre centré et agrandi -->
     <div class="header-title-row">
-      <h1>🎤 Raise You Up! <span class="version-badge">v52</span></h1>
+      <h1>🎤 Raise You Up! <span class="version-badge">v53</span></h1>
     </div>
 
-    <!-- Ligne 2 : Liste des morceaux, Tonalité, Tempo -->
     <div class="header-controls-row">
-      <!-- 1. Choisir un morceau -->
       <select id="projectSelect" onchange="switchProject(this.value)">
         <option value="">-- Choisir un morceau --</option>
       </select>
 
-      <!-- 2. Tonalité & Affichage dynamique double -->
       <div class="control-group">
         <span>Tonalité :</span>
         <button class="btn-step" onclick="stepPitch(-1)">-</button>
@@ -144,7 +137,6 @@
         <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); min-width: 65px;"></span>
       </div>
 
-      <!-- 3. Tempo -->
       <div class="control-group">
         <span>Tempo :</span>
         <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
@@ -155,7 +147,7 @@
   </header>
 
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v52)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v53)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -296,10 +288,29 @@
 
   async function switchProject(idx) {
     if (idx === "") {
+      // Remise à zéro complète
+      stopAllSources();
+      isPlaying = false;
+      pauseOffset = 0;
+      duration = 0;
+      tracks = [];
       currentProjectOriginalKey = "";
+      
+      playBtn.innerText = "▶";
+      playBtn.disabled = true;
+      rewindBtn.disabled = true;
+      document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
+      document.getElementById("progress").style.width = "0%";
+      document.getElementById("tracksList").innerHTML = "";
+      
+      resetPitch();
       updateDynamicKeyDisplay();
+      resetTempo();
+      
+      status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
       return;
     }
+
     stopAllSources();
     isPlaying = false;
     pauseOffset = 0;
