@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v19)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v21)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -51,7 +51,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v19</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v21</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -104,7 +104,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v19)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v21)</div>
     <div class="controls-row">
       <button class="play-btn" id="playBtn" disabled>▶</button>
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
@@ -209,7 +209,8 @@
     listContainer.innerHTML = "";
 
     duration = 0;
-    const folder = proj.folder || proj.path || proj.name || proj.title || '';
+    
+    // Extraction directe des fichiers de pistes fournis par le JSON
     const trackListObj = proj.tracks || proj.files || proj.items || [];
     let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
 
@@ -220,14 +221,14 @@
 
     let loaded = 0;
     for (let i = 0; i < trackFiles.length; i++) {
-      let fileName = trackFiles[i];
-      if (typeof fileName === 'object' && fileName !== null) {
-        fileName = fileName.name || fileName.file || fileName.filename || '';
+      let fileEntry = trackFiles[i];
+      if (typeof fileEntry === 'object' && fileEntry !== null) {
+        fileEntry = fileEntry.name || fileEntry.file || fileEntry.filename || '';
       }
       
-      const trackName = String(fileName).replace(/\.[^/.]+$/, "");
-      const cleanFolder = String(folder).trim().replace(/\/$/, "");
-      const url = cleanFolder && cleanFolder !== trackName ? `${cleanFolder}/${encodeURIComponent(fileName)}` : encodeURIComponent(fileName);
+      const trackName = String(fileEntry).replace(/\.[^/.]+$/, "");
+      // Utilisation directe du chemin brut ou encodé fourni par le fichier JSON sans le préfixer aveuglément
+      const url = String(fileEntry);
 
       try {
         const player = new Tone.Player();
@@ -256,12 +257,12 @@
           mute: false
         });
       } catch (e) {
-        console.error("Erreur chargement Tone.Player pour :", url, e);
+        console.error("Erreur chargement Tone.Player pour l'URL :", url, e);
       }
     }
 
     if (tracks.length === 0) {
-      status.innerText = "Erreur de chargement des pistes audio.";
+      status.innerText = "Erreur de chargement des pistes audio (vérifiez la console).";
       return;
     }
 
