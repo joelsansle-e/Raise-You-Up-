@@ -149,8 +149,7 @@
     }
   }
 
-  let audioCtx = null;
-  let tracks = [], isPlaying = false, startTime = 0, pauseOffset = 0, duration = 0;
+  let tracks = [], isPlaying = false, pauseOffset = 0, duration = 0;
   let currentPitchSemitones = 0;
   let currentTempoRatio = 1.0;
   let pitchShiftNode = null;
@@ -177,7 +176,7 @@
     document.getElementById("tempoSlider").value = currentTempoRatio;
     document.getElementById("tempoLabel").innerText = `${Math.round(currentTempoRatio * 100)}%`;
     tracks.forEach(t => {
-      if (t.source) t.source.playbackRate.value = currentTempoRatio;
+      if (t.player) t.player.playbackRate = currentTempoRatio;
     });
   }
 
@@ -196,9 +195,6 @@
     const proj = availableProjects[idx];
     status.innerText = "Chargement des pistes...";
 
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
-
     if (typeof Tone !== 'undefined') {
       await Tone.start();
       if (!pitchShiftNode) {
@@ -214,44 +210,42 @@
     let loaded = 0;
     const trackFiles = proj.tracks || proj.files || [];
 
-    const loadPromises = trackFiles.map(async (fileName) => {
+    for (let i = 0; i < trackFiles.length; i++) {
+      const fileName = trackFiles[i];
       const trackName = fileName.replace(/\.[^/.]+$/, "");
       const folder = proj.folder || proj.path || '';
       const url = folder ? `${folder}/${fileName}` : fileName;
-      try {
-        const response = await fetch(url);
-        const arrayBuffer = await response.arrayBuffer();
-        const decodedBuffer = await audioCtx.decodeAudioData(arrayBuffer);
 
-        if (decodedBuffer.duration > duration) duration = decodedBuffer.duration;
+      try {
+        const player = new Tone.Player();
+        player.playbackRate = currentTempoRatio;
+        await player.load(url);
+
+        const volumeNode = new Tone.Volume(0);
+        player.connect(volumeNode);
+        if (pitchShiftNode) {
+          volumeNode.connect(pitchShiftNode);
+        } else {
+          volumeNode.toDestination();
+        }
+
+        if (player.buffer.duration > duration) duration = player.buffer.duration;
         loaded++;
         status.innerText = `Chargement (${loaded}/${trackFiles.length})...`;
 
-        const gainNode = audioCtx.createGain();
-        if (pitchShiftNode) {
-          gainNode.connect(pitchShiftNode);
-        } else {
-          gainNode.connect(audioCtx.destination);
-        }
-
-        return {
+        tracks.push({
           name: trackName,
-          buffer: decodedBuffer,
-          gainNode: gainNode,
+          player: player,
+          volumeNode: volumeNode,
           baseVol: 1,
           pre: false,
           solo: false,
-          mute: false,
-          source: null
-        };
+          mute: false
+        });
       } catch (e) {
         console.error("Erreur chargement piste:", fileName, e);
-        return null;
       }
-    });
-
-    const loadedTracks = await Promise.all(loadPromises);
-    tracks = loadedTracks.filter(t => t !== null);
+    }
 
     tracks.forEach((t, i) => {
       const row = document.createElement("div");
@@ -276,18 +270,11 @@
 
   function playAll(offset = 0) {
     stopAllSources();
-    if (!audioCtx) return;
-    const startAt = audioCtx.currentTime + 0.05;
-
     tracks.forEach(t => {
-      t.source = audioCtx.createBufferSource();
-      t.source.buffer = t.buffer;
-      t.source.playbackRate.value = currentTempoRatio;
-      t.source.connect(t.gainNode);
-      t.source.start(startAt, offset);
+      if (t.player && t.player.loaded) {
+        t.player.start(Tone.now(), offset);
+      }
     });
-
-    startTime = startAt - (offset / currentTempoRatio);
     updateMix();
     isPlaying = true;
     playBtn.innerText = "⏸";
@@ -296,21 +283,19 @@
 
   function stopAllSources() {
     tracks.forEach(t => {
-      if (t.source) {
-        try { t.source.stop(); } catch(e){}
-        t.source.disconnect();
-        t.source = null;
+      if (t.player) {
+        try { t.player.stop(); } catch(e){}
       }
     });
   }
 
   playBtn.onclick = async () => {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') await audioCtx.resume();
     if (typeof Tone !== 'undefined') await Tone.start();
 
     if (isPlaying) {
-      pauseOffset = (audioCtx.currentTime - startTime) * currentTempoRatio;
+      pauseOffset = tracks[0] && tracks[0].player.state === "started" 
+        ? tracks[0].player.toSeconds(Tone.now() - tracks[0].player._startTime) + pauseOffset 
+        : pauseOffset;
       stopAllSources();
       isPlaying = false;
       playBtn.innerText = "▶";
@@ -321,11 +306,11 @@
   };
 
   setInterval(() => {
-    if (isPlaying && duration > 0 && audioCtx) {
-      const cur = Math.min(duration, (audioCtx.currentTime - startTime) * currentTempoRatio);
+    if (isPlaying && duration > 0 && tracks[0] && tracks[0].player && tracks[0].player.state === "started") {
+      const cur = Math.min(duration, tracks[0].player.toSeconds(Tone.now() - tracks[0].player._startTime) + pauseOffset);
       document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
       document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
-      if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; }
+      if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; status.innerText = "Terminé"; }
     }
   }, 100);
 
@@ -349,13 +334,13 @@
     const hasSolo = tracks.some(t => t.solo);
     const hasPre = tracks.some(t => t.pre);
     tracks.forEach(t => {
-      if (!t.gainNode || !audioCtx) return;
       let v = t.baseVol;
       if (t.mute) v = 0;
       else if (hasSolo) v = t.solo ? t.baseVol : 0;
       else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
       
-      t.gainNode.gain.setTargetAtTime(Math.max(0, Math.min(1, v)), audioCtx.currentTime, 0.01);
+      const db = v === 0 ? -Infinity : 20 * Math.log10(v);
+      if (t.volumeNode) t.volumeNode.volume.value = db;
     });
   }
 
