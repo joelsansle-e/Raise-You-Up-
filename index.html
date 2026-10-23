@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v23)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v26)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -51,7 +51,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v23</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v26</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -104,7 +104,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v23)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v26)</div>
     <div class="controls-row">
       <button class="play-btn" id="playBtn" disabled>▶</button>
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
@@ -210,7 +210,7 @@
 
     duration = 0;
     
-    const folderName = proj.folder || proj.path || proj.name || proj.title || '';
+    const folderName = proj.folder || proj.path || '';
     const trackListObj = proj.tracks || proj.files || proj.items || [];
     let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
 
@@ -221,29 +221,37 @@
 
     let loaded = 0;
     for (let i = 0; i < trackFiles.length; i++) {
-      let fileEntry = trackFiles[i];
-      if (typeof fileEntry === 'object' && fileEntry !== null) {
-        fileEntry = fileEntry.name || fileEntry.file || fileEntry.filename || '';
+      let rawFile = trackFiles[i];
+      if (typeof rawFile === 'object' && rawFile !== null) {
+        rawFile = rawFile.name || rawFile.file || rawFile.filename || '';
       }
       
-      const trackName = String(fileEntry).replace(/\.[^/.]+$/, "");
+      let filePath = String(rawFile).trim();
+      const fileNameOnly = filePath.split('/').pop();
+      const trackName = fileNameOnly.replace(/\.[^/.]+$/, "");
       
-      // Encodage propre segment par segment pour respecter les espaces et les accents (ex: é)
-      const cleanFolder = String(folderName).trim();
-      let url = cleanFolder ? `${encodeURIComponent(cleanFolder)}/${encodeURIComponent(fileEntry)}` : encodeURIComponent(fileEntry);
-      
-      // Sécurité supplémentaire : décoder les éventuels doubles encodages pour uniformiser
-      try {
-        url = decodeURIComponent(url);
-        // Ré-encoder correctement chaque partie de l'URL pour le serveur web
-        url = url.split('/').map(segment => encodeURIComponent(segment)).join('/');
-      } catch(e) {}
+      // On teste d'abord avec le dossier, puis directement avec le fichier seul si le dossier pose problème
+      let urlWithFolder = folderName ? `${folderName}/${filePath}` : filePath;
+      urlWithFolder = urlWithFolder.split('/').map(part => encodeURIComponent(part)).join('/');
+      let urlDirect = encodeURIComponent(fileNameOnly);
+
+      let loadedSuccessfully = false;
+      let player = new Tone.Player();
+      player.playbackRate = currentTempoRatio;
 
       try {
-        const player = new Tone.Player();
-        player.playbackRate = currentTempoRatio;
-        await player.load(url);
+        await player.load(urlWithFolder);
+        loadedSuccessfully = true;
+      } catch (e1) {
+        try {
+          await player.load(urlDirect);
+          loadedSuccessfully = true;
+        } catch (e2) {
+          console.error("Impossible de charger la piste :", fileNameOnly);
+        }
+      }
 
+      if (loadedSuccessfully) {
         const volumeNode = new Tone.Volume(0);
         player.connect(volumeNode);
         if (pitchShiftNode) {
@@ -265,8 +273,6 @@
           solo: false,
           mute: false
         });
-      } catch (e) {
-        console.error("Erreur chargement Tone.Player pour l'URL :", url, e);
       }
     }
 
