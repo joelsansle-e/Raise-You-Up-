@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v26)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v27)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <style>
     :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
@@ -51,7 +51,7 @@
 
 <div class="container">
   <header>
-    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v26</span></h1>
+    <h1>🎛️ Morceaux Raise You Up! <span class="version-badge">v27</span></h1>
     <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
       
       <!-- Tonalité -->
@@ -104,7 +104,7 @@
     </div>
   </header>
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v26)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v27)</div>
     <div class="controls-row">
       <button class="play-btn" id="playBtn" disabled>▶</button>
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
@@ -152,6 +152,7 @@
   }
 
   let tracks = [], isPlaying = false, pauseOffset = 0, duration = 0;
+  let playStartRealTime = 0;
   let currentPitchSemitones = 0;
   let currentTempoRatio = 1.0;
   let pitchShiftNode = null;
@@ -189,6 +190,7 @@
     stopAllSources();
     isPlaying = false;
     pauseOffset = 0;
+    playStartRealTime = 0;
     playBtn.innerText = "▶";
     playBtn.disabled = true;
     document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
@@ -230,7 +232,6 @@
       const fileNameOnly = filePath.split('/').pop();
       const trackName = fileNameOnly.replace(/\.[^/.]+$/, "");
       
-      // On teste d'abord avec le dossier, puis directement avec le fichier seul si le dossier pose problème
       let urlWithFolder = folderName ? `${folderName}/${filePath}` : filePath;
       urlWithFolder = urlWithFolder.split('/').map(part => encodeURIComponent(part)).join('/');
       let urlDirect = encodeURIComponent(fileNameOnly);
@@ -304,9 +305,12 @@
 
   function playAll(offset = 0) {
     stopAllSources();
+    playStartRealTime = Tone.now();
+    pauseOffset = offset;
+    
     tracks.forEach(t => {
       if (t.player && t.player.loaded) {
-        t.player.start(Tone.now(), offset);
+        t.player.start(playStartRealTime, offset);
       }
     });
     updateMix();
@@ -327,21 +331,23 @@
     if (typeof Tone !== 'undefined') await Tone.start();
 
     if (isPlaying) {
-      pauseOffset = tracks[0] && tracks[0].player.state === "started" 
-        ? tracks[0].player.toSeconds(Tone.now() - tracks[0].player._startTime) + pauseOffset 
-        : pauseOffset;
+      // Calcul propre du temps écoulé sans utiliser de propriétés internes privées
+      const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
+      pauseOffset = Math.min(duration, pauseOffset + elapsed);
       stopAllSources();
       isPlaying = false;
       playBtn.innerText = "▶";
       status.innerText = "En pause";
     } else {
+      if (pauseOffset >= duration) pauseOffset = 0;
       playAll(pauseOffset);
     }
   };
 
   setInterval(() => {
-    if (isPlaying && duration > 0 && tracks[0] && tracks[0].player && tracks[0].player.state === "started") {
-      const cur = Math.min(duration, tracks[0].player.toSeconds(Tone.now() - tracks[0].player._startTime) + pauseOffset);
+    if (isPlaying && duration > 0) {
+      const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
+      const cur = Math.min(duration, pauseOffset + elapsed);
       document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
       document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
       if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; status.innerText = "Terminé"; }
