@@ -18,19 +18,41 @@ jobs:
             const fs = require("fs");
             const path = require("path");
             
-            const isDir = d => fs.statSync(d).isDirectory() && !d.startsWith(".") && d !== "node_modules";
-            const folders = fs.readdirSync(".").filter(isDir);
-            
-            const playlist = folders.map(folder => {
-              const files = fs.readdirSync(folder).filter(f => f.toLowerCase().endsWith(".mp3") || f.toLowerCase().endsWith(".wav"));
-              return {
-                title: folder.replace(/_/g, " "),
-                folder: folder,
-                tracks: files
+            try {
+              const isDir = d => {
+                try {
+                  return fs.statSync(d).isDirectory() && !d.startsWith(".") && d !== "node_modules";
+                } catch (e) {
+                  return false;
+                }
               };
-            }).filter(p => p.tracks.length > 0);
-            
-            fs.writeFileSync("playlist.json", JSON.stringify(playlist, null, 2));
+              
+              const folders = fs.readdirSync(".").filter(isDir);
+              
+              const playlist = folders.map(folder => {
+                const files = fs.readdirSync(folder).filter(f => f.toLowerCase().endsWith(".mp3") || f.toLowerCase().endsWith(".wav"));
+                
+                // Nettoie le titre pour enlever les crochets (ex: "Everything_Hallelujah_[Eb]" -> "Everything Hallelujah")
+                let cleanTitle = folder.replace(/\[.*?\]/g, "").replace(/_/g, " ").trim();
+                
+                // Extrait la tonalité automatiquement
+                let match = folder.match(/\[([A-G][b\#]?m?)\]/i);
+                let key = match ? match[1] : null;
+
+                return {
+                  title: cleanTitle || folder.replace(/_/g, " "),
+                  folder: folder,
+                  key: key,
+                  tracks: files
+                };
+              }).filter(p => p.tracks.length > 0);
+              
+              fs.writeFileSync("playlist.json", JSON.stringify(playlist, null, 2));
+              console.log("playlist.json généré avec succès !");
+            } catch (err) {
+              console.error("Erreur lors de la génération du JSON:", err);
+              process.exit(1);
+            }
           '
 
       - name: Commit and Push playlist.json
