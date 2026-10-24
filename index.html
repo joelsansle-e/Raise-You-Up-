@@ -127,8 +127,20 @@
     .rewind-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
     
     .time-display { font-family: monospace; color: var(--primary); min-width: 100px; text-align: center; font-size: 0.9rem; }
-    .timeline { flex: 1; min-width: 140px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; cursor: pointer; }
+    .timeline { flex: 1; min-width: 140px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; cursor: pointer; touch-action: none; }
     .timeline-progress { height: 100%; background: var(--primary); border-radius: 4px; width: 0%; pointer-events: none; }
+    .timeline-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      left: 0%;
+      pointer-events: none;
+    }
     .tracks-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     
     .track-row { display: flex; flex-direction: column; gap: 12px; padding: 15px; }
@@ -236,6 +248,7 @@
       <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
       <div class="timeline" id="timeline">
         <div class="timeline-progress" id="progress"></div>
+        <div class="timeline-thumb" id="thumb"></div>
       </div>
     </div>
   </div>
@@ -629,91 +642,70 @@
   };
 
   const timeline = document.getElementById("timeline");
+  const progress = document.getElementById("progress");
+  const thumb = document.getElementById("thumb");
   let isDragging = false;
 
-  function getTimeFromEvent(e) {
+  function getTargetTime(e) {
     const rect = timeline.getBoundingClientRect();
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     return pos * duration;
   }
 
-  timeline.onmousedown = (e) => {
+  function updateTimelineUI(cur) {
+    if (duration <= 0) return;
+    const pct = (cur / duration) * 100;
+    progress.style.width = `${pct}%`;
+    thumb.style.left = `${pct}%`;
+    document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
+  }
+
+  function startDrag(e) {
     if (duration <= 0) return;
     isDragging = true;
-    const targetTime = getTimeFromEvent(e);
+    const targetTime = getTargetTime(e);
     updateTimelineUI(targetTime);
-  };
+  }
 
-  window.onmousemove = (e) => {
+  function onDrag(e) {
     if (!isDragging || duration <= 0) return;
-    const targetTime = getTimeFromEvent(e);
+    const targetTime = getTargetTime(e);
     updateTimelineUI(targetTime);
-  };
+  }
 
-  window.onmouseup = (e) => {
+  function endDrag(e) {
     if (!isDragging) return;
     isDragging = false;
-    const targetTime = getTimeFromEvent(e);
+    const targetTime = getTargetTime(e);
     pauseOffset = targetTime;
     if (isPlaying) {
       playAll(targetTime);
     }
-  };
-
-  function updateTimelineUI(cur) {
-    document.getElementById("progress").style.width = `${(cur / duration) * 100}%`;
-    document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
   }
+
+  timeline.addEventListener("mousedown", startDrag);
+  window.addEventListener("mousemove", onDrag);
+  window.addEventListener("mouseup", endDrag);
+
+  timeline.addEventListener("touchstart", startDrag, { passive: true });
+  window.addEventListener("touchmove", onDrag, { passive: true });
+  window.addEventListener("touchend", endDrag);
 
   setInterval(() => {
     if (isPlaying && duration > 0 && !isDragging) {
       const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
       const cur = Math.min(duration, pauseOffset + elapsed);
       updateTimelineUI(cur);
-      if (cur >= duration) { stopAllSources(); isPlaying = false; pauseOffset = 0; playBtn.innerText = "▶"; status.innerText = "Terminé"; }
+      if (cur >= duration) { 
+        stopAllSources(); 
+        isPlaying = false; 
+        pauseOffset = 0; 
+        playBtn.innerText = "▶"; 
+        status.innerText = "Terminé"; 
+      }
     }
   }, 100);
-
-  function setVolume(i, v) { 
-    tracks[i].baseVol = parseFloat(v); 
-    const pct = Math.round(v * 100);
-    const label = document.getElementById(`vol-label-${i}`);
-    if (label) label.innerText = `${pct}%`;
-    updateMix(); 
-  }
-
-  function resetVolume(i) {
-    tracks[i].baseVol = 1.0;
-    const slider = document.getElementById(`vol-range-${i}`);
-    if (slider) slider.value = 1.0;
-    const label = document.getElementById(`vol-label-${i}`);
-    if (label) label.innerText = `100%`;
-    updateMix();
-  }
-
-  function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
-  function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
-  function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
-
-  function updateMix() {
-    const hasSolo = tracks.some(t => t.solo);
-    const hasPre = tracks.some(t => t.pre);
-    tracks.forEach(t => {
-      let v = t.baseVol;
-      if (t.mute) v = 0;
-      else if (hasSolo) v = t.solo ? t.baseVol : 0;
-      else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
-      
-      const db = v === 0 ? -Infinity : 20 * Math.log10(v);
-      if (t.volumeNode) t.volumeNode.volume.value = db;
-    });
-  }
-
-  function formatTime(s) {
-    const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
-    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  }
 </script>
 </body>
 </html>
