@@ -37,14 +37,16 @@
 
     #bg-video {
       position: fixed;
-      right: 0;
-      bottom: 0;
+      top: 50%;
+      left: 50%;
       min-width: 100%;
       min-height: 100%;
       width: auto;
       height: auto;
-      z-index: -1; /* Place la vidéo derrière tout le contenu de l'application */
-      object-fit: cover; /* Permet à la vidéo de remplir tout l'écran sans se déformer */
+      z-index: -1;
+      transform: translate(-50%, -50%);
+      object-fit: cover;
+      pointer-events: none;
     }
     
     #sysContainer {
@@ -196,7 +198,7 @@
   </style>
 </head>
 <body>
-  <video autoplay muted loop playsinline id="bg-video">
+  <video autoplay muted loop playsinline webkit-playsinline preload="auto" id="bg-video">
     <source src="bg-pingu.mp4" type="video/mp4">
   </video>
 <div id="sysContainer">
@@ -784,6 +786,15 @@
     const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
     return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
   }
+  
+  document.addEventListener("DOMContentLoaded", () => {
+    const bgVid = document.getElementById("bg-video");
+    if (bgVid) {
+      bgVid.play().catch(error => {
+        console.log("Lecture automatique de la vidéo bloquée par le mobile, tentative de relance...", error);
+      });
+    }
+  });
 </script>
 </body>
 </html>
