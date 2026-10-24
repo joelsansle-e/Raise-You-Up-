@@ -5,9 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lecteur Multipiste - Raise You Up! (v60)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  <!-- Ligne ajoutée pour importer la police Inter -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
   <style>
-    :root { --bg: #0b0f19; --card: #131b2e; --primary: #00d2ff; --text: #f0f4f8; --text-dim: #8a99ad; --accent: #ff4757; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    :root { 
+      --bg: #0b0f19; 
+      --card: #131b2e; 
+      --primary: rgba(54, 15, 18, 1); 
+      --text: #f0f4f8; 
+      --text-dim: #8a99ad; 
+      --accent: #ff4757; 
+    }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    }
     
     body { 
       background-color: var(--bg); 
@@ -81,7 +96,7 @@
 
     .sys-card button.btn-exec {
       background: var(--primary);
-      color: #000;
+      color: #fff;
       border: none;
       padding: 12px;
       border-radius: 8px;
@@ -122,12 +137,12 @@
     .btn-step { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text); width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
     .btn-step:hover { background: rgba(255,255,255,0.2); }
     .btn-reset { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-    .btn-reset:hover { background: var(--primary); color: #000; }
+    .btn-reset:hover { background: var(--primary); color: #fff; }
 
     .player-card { display: flex; flex-direction: column; gap: 15px; }
     .controls-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
     .play-btn, .rewind-btn { width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid rgba(255,255,255,0.2); font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
-    .play-btn { background: var(--primary); color: #000; border: none; font-size: 1.3rem; }
+    .play-btn { background: var(--primary); color: #fff; border: none; font-size: 1.3rem; }
     .play-btn:disabled, .rewind-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .rewind-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
     
@@ -159,11 +174,11 @@
 
     .btn-group { display: flex; gap: 6px; }
     .btn-track { padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
-    .btn-track.active-pre { background: var(--primary); color: #000; }
+    .btn-track.active-pre { background: var(--primary); color: #fff; }
     .btn-track.active-solo { background: #eccc68; color: #000; }
     .btn-track.active-mute { background: var(--accent); color: #fff; }
     
-    .version-badge { font-size: 0.75rem; background: rgba(0, 210, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block; font-weight: normal; }
+    .version-badge { font-size: 0.75rem; background: rgba(54, 15, 18, 0.2); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block; font-weight: normal; }
 
     @media (min-width: 768px) {
       body { padding: 20px; }
