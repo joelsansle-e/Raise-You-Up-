@@ -11,6 +11,11 @@
     
     body { 
       background-color: var(--bg); 
+      background-image: linear-gradient(rgba(11, 15, 25, 0.85), rgba(11, 15, 25, 0.85)), url('bg-pingu.jpg');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
       color: var(--text); 
       padding: 10px; 
       min-height: 100vh; 
@@ -275,7 +280,14 @@
     if (val === systemConfig) {
       if (typeof Tone !== 'undefined') {
         await Tone.start();
+        // Force l'activation et le routage audio sur iOS
+        if (Tone.context && Tone.context.rawContext) {
+          try {
+            Tone.context.rawContext.resume();
+          } catch(e) {}
+        }
       }
+
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       loadPlaylist();
