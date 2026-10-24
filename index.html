@@ -25,11 +25,6 @@
     
     body { 
       background-color: var(--bg); 
-      background-image: url('bg-pingu.jpg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
       color: var(--text); 
       padding: 10px; 
       min-height: 100vh; 
@@ -37,6 +32,19 @@
       justify-content: center; 
       align-items: center; 
       overflow-x: hidden;
+      position: relative; /* Indispensable pour positionner la vidéo par-dessus */
+    }
+
+    #bg-video {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      z-index: -1; /* Place la vidéo derrière tout le contenu de l'application */
+      object-fit: cover; /* Permet à la vidéo de remplir tout l'écran sans se déformer */
     }
     
     #sysContainer {
@@ -188,7 +196,9 @@
   </style>
 </head>
 <body>
-
+  <video autoplay muted loop playsinline id="bg-video">
+    <source src="bg-pingu.mp4" type="video/mp4">
+  </video>
 <div id="sysContainer">
   <div class="sys-card">
     <h2>🎤 Raise You Up! <span class="version-badge">v60</span></h2>
