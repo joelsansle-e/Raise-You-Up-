@@ -706,6 +706,45 @@
       }
     }
   }, 100);
+  function setVolume(i, v) { 
+    tracks[i].baseVol = parseFloat(v); 
+    const pct = Math.round(v * 100);
+    const label = document.getElementById(`vol-label-${i}`);
+    if (label) label.innerText = `${pct}%`;
+    updateMix(); 
+  }
+
+  function resetVolume(i) {
+    tracks[i].baseVol = 1.0;
+    const slider = document.getElementById(`vol-range-${i}`);
+    if (slider) slider.value = 1.0;
+    const label = document.getElementById(`vol-label-${i}`);
+    if (label) label.innerText = `100%`;
+    updateMix();
+  }
+
+  function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
+  function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
+  function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
+
+  function updateMix() {
+    const hasSolo = tracks.some(t => t.solo);
+    const hasPre = tracks.some(t => t.pre);
+    tracks.forEach(t => {
+      let v = t.baseVol;
+      if (t.mute) v = 0;
+      else if (hasSolo) v = t.solo ? t.baseVol : 0;
+      else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
+      
+      const db = v === 0 ? -Infinity : 20 * Math.log10(v);
+      if (t.volumeNode) t.volumeNode.volume.value = db;
+    });
+  }
+
+  function formatTime(s) {
+    const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
+    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
 </script>
 </body>
 </html>
