@@ -257,9 +257,12 @@
     }
   }
 
-  function initSession() {
+  async function initSession() {
     const val = document.getElementById("appConfigInput").value.trim();
     if (val === systemConfig) {
+      if (typeof Tone !== 'undefined') {
+        await Tone.start();
+      }
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       loadPlaylist();
