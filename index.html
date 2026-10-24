@@ -677,10 +677,13 @@
   function endDrag(e) {
     if (!isDragging) return;
     isDragging = false;
-    const targetTime = getTargetTime(e);
+    // On récupère la position du dernier événement tactile ou souris
+    const targetTime = getTargetTime(e.changedTouches ? { clientX: e.changedTouches[0].clientX } : e);
     pauseOffset = targetTime;
     if (isPlaying) {
       playAll(targetTime);
+    } else {
+      updateTimelineUI(targetTime);
     }
   }
 
