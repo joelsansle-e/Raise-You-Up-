@@ -36,18 +36,17 @@
     }
 
     #bg-video {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      min-width: 100%;
-      min-height: 100%;
-      width: auto;
-      height: auto;
-      z-index: -1;
-      transform: translate(-50%, -50%);
-      object-fit: cover;
-      pointer-events: none;
-    }
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    object-position: center;
+    z-index: -1;
+    pointer-events: none;
+    user-select: none;
+  }
     
     #sysContainer {
       position: fixed;
@@ -198,9 +197,9 @@
   </style>
 </head>
 <body>
-  <video autoplay muted loop playsinline webkit-playsinline preload="auto" id="bg-video">
-    <source src="bg-pingu.mp4" type="video/mp4">
-  </video>
+  <video autoplay muted loop playsinline webkit-playsinline id="bg-video" poster="bg-pingu.jpg">
+  <source src="bg-pingu.mp4" type="video/mp4">
+</video>
 <div id="sysContainer">
   <div class="sys-card">
     <h2>🎤 Raise You Up! <span class="version-badge">v60</span></h2>
@@ -304,13 +303,16 @@
   async function initSession() {
     const val = document.getElementById("appConfigInput").value.trim();
     if (val === systemConfig) {
+      // Forcer le lancement de la vidéo sur mobile lors du clic utilisateur
+      const bgVid = document.getElementById("bg-video");
+      if (bgVid) {
+        bgVid.play().catch(e => console.log("Vidéo bloquée par économie d'énergie iOS", e));
+      }
+
       if (typeof Tone !== 'undefined') {
         await Tone.start();
-        // Force l'activation et le routage audio sur iOS
         if (Tone.context && Tone.context.rawContext) {
-          try {
-            Tone.context.rawContext.resume();
-          } catch(e) {}
+          try { Tone.context.rawContext.resume(); } catch(e) {}
         }
       }
 
@@ -795,6 +797,19 @@
       });
     }
   });
+
+  // Déblocage tactile de secours pour mobile
+  const startVideoOnTouch = () => {
+    const bgVid = document.getElementById("bg-video");
+    if (bgVid && bgVid.paused) {
+      bgVid.play().catch(() => {});
+    }
+    window.removeEventListener("touchstart", startVideoOnTouch);
+    window.removeEventListener("click", startVideoOnTouch);
+  };
+  window.addEventListener("touchstart", startVideoOnTouch, { once: true });
+  window.addEventListener("click", startVideoOnTouch, { once: true });
+  
 </script>
 </body>
 </html>
