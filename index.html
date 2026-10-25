@@ -1033,11 +1033,22 @@
       const notesInput = document.getElementById('notesInput');
       const updatedNotes = notesInput ? notesInput.value.trim() : (currentProjectInfo.Notes || "");
 
-      // Reconstruire le format texte du info.txt
+      // Reconstruire le format texte du info.txt en préservant toutes les clés existantes
       let newInfoContent = `OriginalKey: ${currentProjectOriginalKey}\n`;
+
+      // Mettre à jour dynamiquement la note du Lead actuel
       if (currentLead && currentLeadNote) {
-        newInfoContent += `Key_${capitalize(currentLead)}: ${currentLeadNote}\n`;
+        currentProjectInfo[`Key_${capitalize(currentLead)}`] = currentLeadNote;
       }
+
+      // Réécrire TOUTES les lignes Key_... sans en oublier (Soprano, Tenor, etc.)
+      for (const [key, val] of Object.entries(currentProjectInfo)) {
+        if (key.startsWith("Key_")) {
+          newInfoContent += `${key}: ${val}\n`;
+        }
+      }
+
+      // Ajouter les rôles et les notes modifiées
       if (currentLead) newInfoContent += `Lead: ${currentLead}\n`;
       if (currentSoprano) newInfoContent += `Soprano: ${currentSoprano}\n`;
       if (currentTenor) newInfoContent += `Tenor: ${currentTenor}\n`;
