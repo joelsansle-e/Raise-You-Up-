@@ -310,6 +310,7 @@
     // Variables pour la gestion Admin & Token GitHub
     let githubToken = "";
     let isAdminMode = false;
+    let hasUnsavedChanges = false;
     
     const chromaticNotes = [
       'C', 'Db / C#', 'D', 'Eb / D#', 'E', 'F', 'Gb / F#', 'G', 'Ab / G#', 'A', 'Bb / A#', 'B'
@@ -340,7 +341,6 @@
     async function initSession() {
       const val = document.getElementById("appConfigInput").value.trim();
       
-      // Vérification : Mode Admin avec Token GitHub ou Mode Visiteur classique
       if (val.startsWith("ghp_") || val.startsWith("github_pat_")) {
         githubToken = val;
         isAdminMode = true;
@@ -369,6 +369,19 @@
 
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
+      
+      // 1. Indicateur visuel du mode admin
+      if (isAdminMode) {
+        const appContent = document.getElementById("appContent");
+        let adminBadge = document.getElementById("adminBadge");
+        if (!adminBadge) {
+          adminBadge = document.createElement("div");
+          adminBadge.id = "adminBadge";
+          adminBadge.innerText = "👑 Mode Administrateur Actif";
+          adminBadge.style.cssText = "background: rgba(35, 134, 54, 0.2); border: 1px solid #238636; color: #3fb950; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;";
+          appContent.insertBefore(adminBadge, appContent.firstChild);
+        }
+      }
       
       console.log(message);
       await loadMembers();
@@ -510,6 +523,7 @@
         }
       });
       updateDynamicKeyDisplay();
+      hasUnsavedChanges = true;
     }
 
     function stepPitch(delta) {
@@ -555,6 +569,19 @@
     }
 
     async function switchProject(idx) {
+      // 3. Boîte de dialogue si modifications non enregistrées
+      if (hasUnsavedChanges) {
+        const confirmSwitch = confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment changer de morceau sans enregistrer ?");
+        if (!confirmSwitch) {
+          // Remettre l'ancienne sélection dans le select
+          const currentSelectIdx = availableProjects.findIndex(p => p === currentProjectInfo._projectRef);
+          select.value = currentSelectIdx !== -1 ? currentSelectIdx : "";
+          return;
+        }
+      }
+
+      hasUnsavedChanges = false;
+
       if (idx === "") {
         stopAllSources();
         isPlaying = false;
@@ -572,7 +599,6 @@
         document.getElementById("tracksList").innerHTML = "";
         document.getElementById("notes-container").style.display = "none";
         
-        // Supprimer le bouton d'enregistrement si présent
         const existingBtn = document.getElementById('saveAdminBtn');
         if (existingBtn) existingBtn.remove();
         
@@ -595,6 +621,7 @@
       document.getElementById("progress").style.width = "0%";
       
       const proj = availableProjects[idx];
+      currentProjectInfo._projectRef = proj; // Garder une ref pour la vérification
       let rawFolder = proj.folder || proj.path || '';
       let folderName = decodeBase64(rawFolder);
 
@@ -606,6 +633,7 @@
         if (infoRes.ok) {
           const infoText = await infoRes.text();
           currentProjectInfo = parseInfoTxt(infoText);
+          currentProjectInfo._projectRef = proj;
         }
       } catch(e) {
         console.log("Pas de fichier info.txt ou erreur de lecture", e);
@@ -619,8 +647,8 @@
       
       const initialSemitones = calculateSemitoneDistance(currentProjectOriginalKey, defaultLeadTargetNote);
       changePitch(initialSemitones);
+      hasUnsavedChanges = false; // Réinitialiser après chargement initial
 
-      // Gestion de l'affichage des notes & Mode Admin (Textarea + Bouton Enregistrer)
       const notesContainer = document.getElementById("notes-container");
       const notesText = document.getElementById("notes-text");
       const headerContainer = document.querySelector('header') || notesContainer.parentNode;
@@ -631,15 +659,15 @@
       if (hasNotes) {
         notesContainer.style.display = "block";
         if (isAdminMode) {
-          notesText.innerHTML = `<textarea id="notesInput" style="width: 100%; min-height: 60px; background: rgba(255,255,255,0.08); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; font-family: inherit; font-size: 14px;">${currentProjectInfo.Notes || ''}</textarea>`;
+          notesText.innerHTML = `<textarea id="notesInput" oninput="hasUnsavedChanges = true;" style="width: 100%; min-height: 60px; background: rgba(255,255,255,0.08); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; font-family: inherit; font-size: 14px;">${currentProjectInfo.Notes || ''}</textarea>`;
           
           if (!saveBtn) {
             saveBtn = document.createElement('button');
             saveBtn.id = 'saveAdminBtn';
             saveBtn.innerText = '💾 Enregistrer sur GitHub';
             saveBtn.style.cssText = 'margin-top: 15px; padding: 10px 20px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s;';
-            saveBtn.onmouseover = () => saveBtn.style.background = '#2ea043';
-            saveBtn.onmouseout = () => saveBtn.style.background = '#238636';
+            saveBtn.onmouseover = () => { if(!saveBtn.disabled) saveBtn.style.background = '#2ea043'; };
+            saveBtn.onmouseout = () => { if(!saveBtn.disabled) saveBtn.style.background = '#238636'; };
             saveBtn.onclick = saveChangesToGitHub;
             notesContainer.appendChild(saveBtn);
           } else {
@@ -829,6 +857,7 @@
       }
 
       selectElement.dataset.prevValue = newVal;
+      hasUnsavedChanges = true;
 
       const roleType = selectElement.getAttribute('data-role');
       if (roleType === 'Lead') {
@@ -1017,38 +1046,39 @@
         return;
       }
 
+      // 2. Retour visuel plus net sur le bouton pendant la sauvegarde
+      const saveBtn = document.getElementById('saveAdminBtn');
+      if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.style.opacity = '0.7';
+        saveBtn.innerText = "⏳ Enregistrement en cours...";
+      }
+
       const proj = availableProjects[selectIdx];
       let rawFolder = proj.folder || proj.path || '';
       let folderName = decodeBase64(rawFolder);
 
-      // Récupérer les rôles actuels sélectionnés à l'écran
       const currentLead = document.querySelector('.role-select[data-role="Lead"]').value;
       const currentSoprano = document.querySelector('.role-select[data-role="Soprano"]').value;
       const currentTenor = document.querySelector('.role-select[data-role="Tenor"]').value;
 
-      // Récupérer la note actuelle du lead affichée
       const currentLeadNote = document.getElementById('currentKeyDisplay').innerText.replace(/[()]/g, "").trim();
 
-      // Récupérer le texte modifié des notes
       const notesInput = document.getElementById('notesInput');
       const updatedNotes = notesInput ? notesInput.value.trim() : (currentProjectInfo.Notes || "");
 
-      // Reconstruire le format texte du info.txt en préservant toutes les clés existantes
       let newInfoContent = `OriginalKey: ${currentProjectOriginalKey}\n`;
 
-      // Mettre à jour dynamiquement la note du Lead actuel
       if (currentLead && currentLeadNote) {
         currentProjectInfo[`Key_${capitalize(currentLead)}`] = currentLeadNote;
       }
 
-      // Réécrire TOUTES les lignes Key_... sans en oublier (Soprano, Tenor, etc.)
       for (const [key, val] of Object.entries(currentProjectInfo)) {
         if (key.startsWith("Key_")) {
           newInfoContent += `${key}: ${val}\n`;
         }
       }
 
-      // Ajouter les rôles et les notes modifiées
       if (currentLead) newInfoContent += `Lead: ${currentLead}\n`;
       if (currentSoprano) newInfoContent += `Soprano: ${currentSoprano}\n`;
       if (currentTenor) newInfoContent += `Tenor: ${currentTenor}\n`;
@@ -1056,7 +1086,6 @@
         newInfoContent += `Notes: ${updatedNotes}\n`;
       }
 
-      // Remplace par ton pseudo GitHub et le nom exact de ton repo
       const owner = "joelsansle-e";
       const repo = "Raise-You-Up-";
       const filePath = folderName ? `${folderName}/info.txt` : `info.txt`;
@@ -1064,7 +1093,6 @@
       try {
         status.innerText = "Enregistrement sur GitHub en cours...";
         
-        // 1. Récupérer le SHA actuel du fichier info.txt sur GitHub
         const getFileUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
         const getRes = await fetch(getFileUrl, {
           headers: { "Authorization": `token ${githubToken}` }
@@ -1074,7 +1102,6 @@
         const fileData = await getRes.json();
         const fileSha = fileData.sha;
 
-        // 2. Envoyer la mise à jour (PUT)
         const putRes = await fetch(getFileUrl, {
           method: "PUT",
           headers: {
@@ -1097,6 +1124,7 @@
           if (currentLead && currentLeadNote) {
             currentProjectInfo[`Key_${capitalize(currentLead)}`] = currentLeadNote;
           }
+          hasUnsavedChanges = false; // Réinitialiser le flag de modification
           status.innerText = "Prêt à la lecture";
         } else {
           const errJson = await putRes.json();
@@ -1106,6 +1134,12 @@
         console.error(error);
         alert("Erreur : " + error.message);
         status.innerText = "Erreur d'enregistrement";
+      } finally {
+        if (saveBtn) {
+          saveBtn.disabled = false;
+          saveBtn.style.opacity = '1';
+          saveBtn.innerText = "💾 Enregistrer sur GitHub";
+        }
       }
     }
     
