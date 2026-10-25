@@ -5,4 +5,4 @@ Key_Celia: Eb
 Lead: nehla
 Soprano: celia
 Tenor: nathan
-Notes: Attention, pause un peu plus longue avant de passer au 2eme couplet !
+Notes: Attention, pause un peu plus longue avant de passer au 2eme couplet
