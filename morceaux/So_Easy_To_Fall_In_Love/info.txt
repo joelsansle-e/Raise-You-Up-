@@ -1,8 +1,8 @@
 OriginalKey: Eb
 Key_Nehla: Db
 Key_Nathan: F
-Key_Celia: Eb
-Lead: nehla
-Soprano: celia
-Tenor: nathan
-Notes: Attention, pause un peu plus longue avant de passer au 2eme couplet !!!
+Key_Celia: F
+Lead: celia
+Soprano: nathan
+Tenor: nehla
+Notes: Attention, pause un peu plus longue avant de passer au 2eme couplet !!! test
