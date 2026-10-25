@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v60)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v61)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
   <style>
-    :root {
+    :root { 
       --bg: #0b0f19; 
       --card: #131b2e; 
       --primary: rgba(146, 94, 98, 1); 
@@ -212,7 +212,7 @@
 </video>
 <div id="sysContainer">
   <div class="sys-card">
-    <h2>🎤 Raise You Up! <span class="version-badge">v60</span></h2>
+    <h2>🎤 Raise You Up! <span class="version-badge">v61</span></h2>
     <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
     <div class="input-wrapper">
       <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -228,7 +228,7 @@
 <div id="appContent">
   <header>
     <div class="header-title-row">
-      <h1>🎤 Raise You Up! <span class="version-badge">v60</span></h1>
+      <h1>🎤 Raise You Up! <span class="version-badge">v61</span></h1>
     </div>
 
     <!-- Zone de notes optionnelle -->
@@ -286,7 +286,7 @@
   </header>
 
   <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v60)</div>
+    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v61)</div>
     <div class="controls-row">
       <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
       <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -559,7 +559,7 @@
     currentProjectOriginalKey = infoConfig.OriginalKey || proj.key || proj.originalKey || "";
 
     resetPitch();
-    if (infoConfig.LeadKey && detectedKey) {
+    if (infoConfig.LeadKey && currentProjectOriginalKey) {
       // Optionnel : si LeadKey est défini, on pourrait calculer l'écart, mais gardons la logique standard
     }
     updateDynamicKeyDisplay();
