@@ -24,30 +24,33 @@ jobs:
           const fs = require("fs");
           const path = require("path");
 
-          // Fonction pour encoder en Base64 de manière sécurisée (support UTF-8)
           function toBase64(str) {
             return Buffer.from(str, "utf8").toString("base64");
           }
 
-          const ignoreDirs = [".github", ".git", "node_modules"];
+          const parentDir = "morceaux";
           const audioExtensions = [".mp3", ".wav", ".m4a", ".aac", ".ogg"];
 
-          let entries = fs.readdirSync(".", { withFileTypes: true });
+          if (!fs.existsSync(parentDir)) {
+            console.error("Le dossier parent " + parentDir + " n existe pas !");
+            process.exit(1);
+          }
+
+          let entries = fs.readdirSync(parentDir, { withFileTypes: true });
           let projects = [];
 
           entries.forEach(entry => {
-            if (entry.isDirectory() && !ignoreDirs.includes(entry.name)) {
+            if (entry.isDirectory()) {
               let folderName = entry.name;
-              let folderPath = path.join(".", folderName);
+              let folderPath = path.join(parentDir, folderName);
               
               let files = fs.readdirSync(folderPath).filter(file => {
                 return audioExtensions.includes(path.extname(file).toLowerCase());
               }).sort();
 
               if (files.length > 0) {
-                // Encodage automatique du dossier et des fichiers en Base64
                 projects.push({
-                  folder: toBase64(folderName),
+                  folder: toBase64(folderPath),
                   tracks: files.map(f => toBase64(f))
                 });
               }
@@ -55,7 +58,7 @@ jobs:
           });
 
           fs.writeFileSync("playlist.json", JSON.stringify(projects, null, 2));
-          console.log("playlist.json généré et encodé en Base64 avec succès !");
+          console.log("playlist.json généré et encodé en Base64 avec succès depuis " + parentDir + " !");
           '
 
       - name: Publier les modifications sur le dépôt
