@@ -370,7 +370,7 @@
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       
-      // 1. Indicateur visuel du mode admin ultra-visible (Design retravaillé)
+      // Indicateur visuel admin avec ta DA (rgba(146, 94, 98, ...)) et transparence ajustée
       if (isAdminMode) {
         const appContent = document.getElementById("appContent");
         let adminBadge = document.getElementById("adminBadge");
@@ -378,7 +378,7 @@
           adminBadge = document.createElement("div");
           adminBadge.id = "adminBadge";
           adminBadge.innerText = "👑 MODE ADMINISTRATEUR ACTIF";
-          adminBadge.style.cssText = "background: #d29922; color: #0d1117; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; margin-bottom: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px;";
+          adminBadge.style.cssText = "background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; margin-bottom: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px;";
           appContent.insertBefore(adminBadge, appContent.firstChild);
         }
       }
