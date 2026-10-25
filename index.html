@@ -300,7 +300,7 @@
     <div class="tracks-list" id="tracksList"></div>
   </div>
 
-  <script>
+<script>
     const systemConfig = "RYU2026";
     let globalMembers = [];
     let availableProjects = [];
@@ -370,7 +370,7 @@
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       
-      // Indicateur visuel du mode admin & Bouton de déconnexion unifié
+      // Barre supérieure avec le badge admin et le bouton de déconnexion unifié
       const appContent = document.getElementById("appContent");
       let topBar = document.getElementById("adminTopBar");
       if (!topBar) {
@@ -392,7 +392,7 @@
         adminBadge.innerText = "👑 MODE ADMINISTRATEUR ACTIF";
         adminBadge.style.display = "block";
       } else {
-        adminBadge.style.display = "none"; // Optionnel : masque le badge en mode visiteur ou affiche "Mode Visiteur"
+        adminBadge.style.display = "none";
       }
 
       let logoutBtn = document.getElementById("logoutBtn");
@@ -631,7 +631,31 @@
       changePitch(newVal);
     }
 
-    function resetPitch() { changePitch(0); }
+    // Remet le pitch à 0 (Tonalité d'origine du morceau)
+    function resetPitchToOriginal() {
+      changePitch(0);
+    }
+
+    // Remet le pitch sur la tonalité spécifique du Lead sélectionné
+    function resetPitchToLead() {
+      const leadSelect = document.querySelector('.role-select[data-role="Lead"]');
+      const currentLead = leadSelect ? leadSelect.value : (currentProjectInfo.Lead || globalMembers[0]);
+
+      if (!currentLead || !currentProjectOriginalKey) {
+        changePitch(0);
+        return;
+      }
+
+      const targetKeyField = `Key_${capitalize(currentLead)}`;
+      const targetNote = currentProjectInfo[targetKeyField];
+
+      if (targetNote) {
+        const semitones = calculateSemitoneDistance(currentProjectOriginalKey, targetNote);
+        changePitch(semitones);
+      } else {
+        changePitch(0);
+      }
+    }
 
     function changeTempo(val) {
       currentTempoRatio = parseFloat(val);
@@ -698,7 +722,7 @@
         const existingBtn = document.getElementById('saveAdminBtn');
         if (existingBtn) existingBtn.remove();
         
-        resetPitch();
+        resetPitchToOriginal();
         updateDynamicKeyDisplay();
         updatePitchSelectOptions();
         resetTempo();
