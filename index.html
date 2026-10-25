@@ -232,11 +232,6 @@
         <h1>🎤 Raise You Up! <span class="version-badge">v62</span></h1>
       </div>
 
-      <!-- Zone de notes au pluriel -->
-      <div id="notes-container" class="notes-box">
-        <strong>💡 Notes : </strong><span id="notes-text"></span>
-      </div>
-
       <div class="header-controls-row">
         <select id="projectSelect" onchange="switchProject(this.value)">
           <option value="">-- Choisir un morceau --</option>
@@ -283,6 +278,10 @@
           <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
           <button class="btn-reset" onclick="resetTempo()">RESET</button>
         </div>
+      </div>
+      <!-- Zone de notes -->
+      <div id="notes-container" class="notes-box">
+        <strong>💡 Notes : </strong><span id="notes-text"></span>
       </div>
     </header>
 
@@ -756,24 +755,42 @@
         }
       });
 
+      document.querySelectorAll('.role-select').forEach(s => {
+        s.dataset.prevValue = s.value;
+      });
+
+      status.innerText = "Prêt à la lecture";
+      playBtn.disabled = false;
+      rewindBtn.disabled = false;
       status.innerText = "Prêt à la lecture";
       playBtn.disabled = false;
       rewindBtn.disabled = false;
     }
 
     function handleRoleChange(selectElement) {
-      const selectedValue = selectElement.value;
-      const selects = document.querySelectorAll('.role-select');
+      const newVal = selectElement.value;
+      const oldVal = selectElement.dataset.prevValue;
       
-      // Si on sélectionne un membre qui est déjà assigné ailleurs, on libère l'autre en le mettant à vide ("--")
-      if (selectedValue !== "") {
-        selects.forEach(s => {
-          if (s !== selectElement && s.value === selectedValue) {
-            s.value = "";
-          }
-        });
+      const selects = document.querySelectorAll('.role-select');
+
+      // Trouver l'autre rôle qui possédait déjà cette valeur
+      let targetSelect = null;
+      selects.forEach(s => {
+        if (s !== selectElement && s.dataset.prevValue === newVal) {
+          targetSelect = s;
+        }
+      });
+
+      // S'il y a un doublon, on lui donne l'ancienne valeur (effet d'échange / swap)
+      if (targetSelect) {
+        targetSelect.value = oldVal;
+        targetSelect.dataset.prevValue = oldVal;
       }
 
+      // Mettre à jour la valeur précédente du select courant
+      selectElement.dataset.prevValue = newVal;
+
+      // Si c'est le Lead qui change, on ajuste la tonalité dynamiquement
       const roleType = selectElement.getAttribute('data-role');
       if (roleType === 'Lead') {
         const newLead = selectElement.value;
@@ -786,7 +803,7 @@
           }
         }
       }
-    }
+    }  
 
     function playAll(offset = 0) {
       stopAllSources();
