@@ -370,15 +370,15 @@
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       
-      // 1. Indicateur visuel du mode admin
+      // 1. Indicateur visuel du mode admin ultra-visible (Design retravaillé)
       if (isAdminMode) {
         const appContent = document.getElementById("appContent");
         let adminBadge = document.getElementById("adminBadge");
         if (!adminBadge) {
           adminBadge = document.createElement("div");
           adminBadge.id = "adminBadge";
-          adminBadge.innerText = "👑 Mode Administrateur Actif";
-          adminBadge.style.cssText = "background: rgba(35, 134, 54, 0.2); border: 1px solid #238636; color: #3fb950; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-bottom: 10px; text-align: center;";
+          adminBadge.innerText = "👑 MODE ADMINISTRATEUR ACTIF";
+          adminBadge.style.cssText = "background: #d29922; color: #0d1117; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; margin-bottom: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px;";
           appContent.insertBefore(adminBadge, appContent.firstChild);
         }
       }
@@ -569,11 +569,9 @@
     }
 
     async function switchProject(idx) {
-      // 3. Boîte de dialogue si modifications non enregistrées
       if (hasUnsavedChanges) {
         const confirmSwitch = confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment changer de morceau sans enregistrer ?");
         if (!confirmSwitch) {
-          // Remettre l'ancienne sélection dans le select
           const currentSelectIdx = availableProjects.findIndex(p => p === currentProjectInfo._projectRef);
           select.value = currentSelectIdx !== -1 ? currentSelectIdx : "";
           return;
@@ -621,7 +619,7 @@
       document.getElementById("progress").style.width = "0%";
       
       const proj = availableProjects[idx];
-      currentProjectInfo._projectRef = proj; // Garder une ref pour la vérification
+      currentProjectInfo._projectRef = proj;
       let rawFolder = proj.folder || proj.path || '';
       let folderName = decodeBase64(rawFolder);
 
@@ -647,7 +645,7 @@
       
       const initialSemitones = calculateSemitoneDistance(currentProjectOriginalKey, defaultLeadTargetNote);
       changePitch(initialSemitones);
-      hasUnsavedChanges = false; // Réinitialiser après chargement initial
+      hasUnsavedChanges = false;
 
       const notesContainer = document.getElementById("notes-container");
       const notesText = document.getElementById("notes-text");
@@ -1033,7 +1031,6 @@
       return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
 
-    // Fonction d'enregistrement magique vers l'API GitHub via le Token PAT
     async function saveChangesToGitHub() {
       if (!isAdminMode || !githubToken) {
         alert("Action non autorisée. Connectez-vous avec un token admin.");
@@ -1046,7 +1043,6 @@
         return;
       }
 
-      // 2. Retour visuel plus net sur le bouton pendant la sauvegarde
       const saveBtn = document.getElementById('saveAdminBtn');
       if (saveBtn) {
         saveBtn.disabled = true;
@@ -1124,7 +1120,7 @@
           if (currentLead && currentLeadNote) {
             currentProjectInfo[`Key_${capitalize(currentLead)}`] = currentLeadNote;
           }
-          hasUnsavedChanges = false; // Réinitialiser le flag de modification
+          hasUnsavedChanges = false;
           status.innerText = "Prêt à la lecture";
         } else {
           const errJson = await putRes.json();
