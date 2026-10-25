@@ -2,6 +2,6 @@ OriginalKey: Eb
 Key_Nehla: C
 Key_Nathan: F
 Key_Celia: Eb
-Lead: nehla
-Soprano: celia
+Lead: celia
+Soprano: nehla
 Tenor: nathan
