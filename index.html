@@ -32,7 +32,7 @@
       justify-content: center; 
       align-items: center; 
       overflow-x: hidden;
-      position: relative; /* Indispensable pour positionner la vidéo par-dessus */
+      position: relative;
     }
 
     #bg-video {
@@ -147,6 +147,16 @@
     .btn-reset { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--primary); padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; }
     .btn-reset:hover { background: var(--primary); color: #fff; }
 
+    .notes-box {
+      background: #2c2224;
+      border-left: 4px solid rgba(146, 94, 98, 1);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 0.9em;
+      display: none;
+      width: 100%;
+    }
+
     .player-card { display: flex; flex-direction: column; gap: 15px; }
     .controls-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
     .play-btn, .rewind-btn { width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid rgba(255,255,255,0.2); font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
@@ -172,7 +182,7 @@
     .tracks-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     
     .track-row { display: flex; flex-direction: column; gap: 12px; padding: 15px; }
-    .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; }
+    .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; display: flex; align-items: center; gap: 8px; }
     .track-controls { width: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
     
     input[type=range] { -webkit-appearance: none; flex: 1; min-width: 90px; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
@@ -219,6 +229,11 @@
   <header>
     <div class="header-title-row">
       <h1>🎤 Raise You Up! <span class="version-badge">v60</span></h1>
+    </div>
+
+    <!-- Zone de notes optionnelle -->
+    <div id="notes-container" class="notes-box">
+      <strong>💡 Note : </strong><span id="notes-text"></span>
     </div>
 
     <div class="header-controls-row">
@@ -303,7 +318,6 @@
   async function initSession() {
     const val = document.getElementById("appConfigInput").value.trim();
     if (val === systemConfig) {
-      // Forcer le lancement de la vidéo sur mobile lors du clic utilisateur
       const bgVid = document.getElementById("bg-video");
       if (bgVid) {
         bgVid.play().catch(e => console.log("Vidéo bloquée par économie d'énergie iOS", e));
@@ -472,6 +486,21 @@
     });
   }
 
+  // Parseur pour le fichier info.txt
+  function parseInfoTxt(text) {
+    const config = {};
+    const lines = text.split('\n');
+    lines.forEach(line => {
+      const parts = line.split(':');
+      if (parts.length >= 2) {
+        const key = parts[0].trim();
+        const value = parts.slice(1).join(':').trim();
+        config[key] = value;
+      }
+    });
+    return config;
+  }
+
   async function switchProject(idx) {
     if (idx === "") {
       stopAllSources();
@@ -487,6 +516,7 @@
       document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
       document.getElementById("progress").style.width = "0%";
       document.getElementById("tracksList").innerHTML = "";
+      document.getElementById("notes-container").style.display = "none";
       
       resetPitch();
       updateDynamicKeyDisplay();
@@ -511,7 +541,22 @@
     let rawFolder = proj.folder || proj.path || '';
     let folderName = decodeBase64(rawFolder);
 
-    let detectedKey = proj.key || proj.originalKey || "";
+    // Chargement optionnel de info.txt
+    let infoConfig = {};
+    try {
+      let infoUrl = folderName ? `${folderName}/info.txt` : `info.txt`;
+      infoUrl = infoUrl.split('/').map(part => encodeURIComponent(part)).join('/');
+      const infoRes = await fetch(infoUrl + '?v=' + new Date().getTime());
+      if (infoRes.ok) {
+        const infoText = await infoRes.text();
+        infoConfig = parseInfoTxt(infoText);
+      }
+    } catch(e) {
+      console.log("Pas de fichier info.txt ou erreur de lecture", e);
+    }
+
+    // Gestion de la tonalité depuis info.txt ou playlist
+    let detectedKey = infoConfig.OriginalKey || proj.key || proj.originalKey || "";
     if (!detectedKey) {
       let textSource = folderName || proj.title || "";
       let match = textSource.match(/__(?:Key-)?([A-G][b\#]?m?)/i) || textSource.match(/\[([A-G][b\#]?m?)\]/i);
@@ -522,7 +567,20 @@
     currentProjectOriginalKey = detectedKey;
 
     resetPitch();
+    if (infoConfig.LeadKey && detectedKey) {
+      // Optionnel : si LeadKey est défini, on pourrait calculer l'écart, mais gardons la logique standard
+    }
     updateDynamicKeyDisplay();
+
+    // Affichage des notes
+    const notesContainer = document.getElementById("notes-container");
+    const notesText = document.getElementById("notes-text");
+    if (infoConfig.Notes && infoConfig.Notes.trim().length > 0) {
+      notesText.textContent = infoConfig.Notes;
+      notesContainer.style.display = "block";
+    } else {
+      notesContainer.style.display = "none";
+    }
 
     status.innerText = "Chargement des pistes en cours...";
 
@@ -605,11 +663,36 @@
       return;
     }
 
+    // Ordre fixe des pistes : Instru, Lead, Soprano, Tenor avec les emojis demandés
+    const fixedRoles = [
+      { label: "🎛️ instru", type: "instru" },
+      { label: "🎤 lead", type: "lead", configKey: "Lead", defaultVal: infoConfig.Lead || "nehla" },
+      { label: "✨ soprano", type: "soprano", configKey: "Soprano", defaultVal: infoConfig.Soprano || "celia" },
+      { label: "🎸 tenor", type: "tenor", configKey: "Tenor", defaultVal: infoConfig.Tenor || "nathan" }
+    ];
+
     tracks.forEach((t, i) => {
+      const roleInfo = fixedRoles[i] || { label: t.name, type: "other" };
       const row = document.createElement("div");
       row.className = "track-row";
+
+      let nameHtml = `<div class="track-name">${roleInfo.label}</div>`;
+      
+      if (roleInfo.type === "lead" || roleInfo.type === "soprano" || roleInfo.type === "tenor") {
+        nameHtml = `
+          <div class="track-name" style="justify-content: space-between;">
+            <span>${roleInfo.label}</span>
+            <select class="role-select" data-role="${roleInfo.configKey}" onchange="updateDropdowns()">
+              <option value="nehla">nehla</option>
+              <option value="celia">celia</option>
+              <option value="nathan">nathan</option>
+            </select>
+          </div>
+        `;
+      }
+
       row.innerHTML = `
-        <div class="track-name">${t.name}</div>
+        ${nameHtml}
         <div class="track-controls">
           <input type="range" id="vol-range-${i}" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
           <button class="btn-reset" onclick="resetVolume(${i})">RESET</button>
@@ -622,11 +705,41 @@
         </div>
       `;
       listContainer.appendChild(row);
+
+      // Assigner la valeur initiale du info.txt si le select existe
+      if (roleInfo.configKey) {
+        const selectEl = row.querySelector('.role-select');
+        if (selectEl && roleInfo.defaultVal) {
+          selectEl.value = roleInfo.defaultVal.toLowerCase();
+        }
+      }
     });
+
+    updateDropdowns();
 
     status.innerText = "Prêt à la lecture";
     playBtn.disabled = false;
     rewindBtn.disabled = false;
+  }
+
+  // Logique anti-doublons pour les menus déroulants de rôles
+  function updateDropdowns() {
+    const selects = document.querySelectorAll('.role-select');
+    const selectedValues = Array.from(selects).map(s => s.value);
+
+    selects.forEach(select => {
+      const currentValue = select.value;
+      const options = select.querySelectorAll('option');
+
+      options.forEach(option => {
+        const val = option.value;
+        if (selectedValues.includes(val) && val !== currentValue) {
+          option.style.display = 'none';
+        } else {
+          option.style.display = 'block';
+        }
+      });
+    });
   }
 
   function playAll(offset = 0) {
@@ -717,7 +830,6 @@
   function endDrag(e) {
     if (!isDragging) return;
     isDragging = false;
-    // On récupère la position du dernier événement tactile ou souris
     const targetTime = getTargetTime(e.changedTouches ? { clientX: e.changedTouches[0].clientX } : e);
     pauseOffset = targetTime;
     if (isPlaying) {
@@ -749,6 +861,7 @@
       }
     }
   }, 100);
+
   function setVolume(i, v) { 
     tracks[i].baseVol = parseFloat(v); 
     const pct = Math.round(v * 100);
@@ -798,7 +911,6 @@
     }
   });
 
-  // Déblocage tactile de secours pour mobile
   const startVideoOnTouch = () => {
     const bgVid = document.getElementById("bg-video");
     if (bgVid && bgVid.paused) {
@@ -809,7 +921,6 @@
   };
   window.addEventListener("touchstart", startVideoOnTouch, { once: true });
   window.addEventListener("click", startVideoOnTouch, { once: true });
-  
 </script>
 </body>
 </html>
