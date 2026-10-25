@@ -509,7 +509,7 @@
       let newIdx = (idx + currentPitchSemitones) % 12;
       if (newIdx < 0) newIdx += 12;
       
-      let transposedNoteStr = chromaticNotes[newIdx].split(' / ')[0];
+      let transposedNoteStr = chromaticNotes[newIdx];
       let finalKey = transposedNoteStr + (isMinor ? 'm' : '');
       keyDisplay.innerText = `(${finalKey})`;
     }
