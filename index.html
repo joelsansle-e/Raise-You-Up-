@@ -555,16 +555,8 @@
       console.log("Pas de fichier info.txt ou erreur de lecture", e);
     }
 
-    // Gestion de la tonalité depuis info.txt ou playlist
-    let detectedKey = infoConfig.OriginalKey || proj.key || proj.originalKey || "";
-    if (!detectedKey) {
-      let textSource = folderName || proj.title || "";
-      let match = textSource.match(/__(?:Key-)?([A-G][b\#]?m?)/i) || textSource.match(/\[([A-G][b\#]?m?)\]/i);
-      if (match) {
-        detectedKey = match[1];
-      }
-    }
-    currentProjectOriginalKey = detectedKey;
+    // La tonalité vient désormais exclusivement de info.txt (ou de la playlist)
+    currentProjectOriginalKey = infoConfig.OriginalKey || proj.key || proj.originalKey || "";
 
     resetPitch();
     if (infoConfig.LeadKey && detectedKey) {
