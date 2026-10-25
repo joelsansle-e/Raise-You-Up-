@@ -722,7 +722,7 @@
         let nameHtml = `<div class="track-name">${roleInfo.label}</div>`;
         
         if (roleInfo.type === "lead" || roleInfo.type === "soprano" || roleInfo.type === "tenor") {
-          let optionsHtml = globalMembers.map(m => `<option value="${m}">${capitalize(m)}</option>`).join('');
+          let optionsHtml = `<option value="">--</option>` + globalMembers.map(m => `<option value="${m}">${capitalize(m)}</option>`).join('');
           nameHtml = `
             <div class="track-name" style="justify-content: space-between;">
               <span>${roleInfo.label}</span>
@@ -756,42 +756,34 @@
         }
       });
 
-      updateDropdowns();
-
       status.innerText = "Prêt à la lecture";
       playBtn.disabled = false;
       rewindBtn.disabled = false;
     }
 
-    function updateDropdowns() {
+    function handleRoleChange(selectElement) {
+      const selectedValue = selectElement.value;
       const selects = document.querySelectorAll('.role-select');
-      const selectedValues = Array.from(selects).map(s => s.value);
-
-      selects.forEach(select => {
-        const currentValue = select.value;
-        const options = select.querySelectorAll('option');
-
-        options.forEach(option => {
-          const val = option.value;
-          if (selectedValues.includes(val) && val !== currentValue) {
-            option.style.display = 'none';
-          } else {
-            option.style.display = 'block';
+      
+      // Si on sélectionne un membre qui est déjà assigné ailleurs, on libère l'autre en le mettant à vide ("--")
+      if (selectedValue !== "") {
+        selects.forEach(s => {
+          if (s !== selectElement && s.value === selectedValue) {
+            s.value = "";
           }
         });
-      });
-    }
+      }
 
-    function handleRoleChange(selectElement) {
-      updateDropdowns();
       const roleType = selectElement.getAttribute('data-role');
       if (roleType === 'Lead') {
         const newLead = selectElement.value;
-        const targetKeyField = `Key_${capitalize(newLead)}`;
-        const targetNote = currentProjectInfo[targetKeyField];
-        if (targetNote && currentProjectOriginalKey) {
-          const semitones = calculateSemitoneDistance(currentProjectOriginalKey, targetNote);
-          changePitch(semitones);
+        if (newLead) {
+          const targetKeyField = `Key_${capitalize(newLead)}`;
+          const targetNote = currentProjectInfo[targetKeyField];
+          if (targetNote && currentProjectOriginalKey) {
+            const semitones = calculateSemitoneDistance(currentProjectOriginalKey, targetNote);
+            changePitch(semitones);
+          }
         }
       }
     }
