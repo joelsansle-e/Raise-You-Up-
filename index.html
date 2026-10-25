@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v64)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v66)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -213,7 +213,7 @@
   
   <div id="sysContainer">
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v64</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v66</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -229,7 +229,7 @@
   <div id="appContent">
     <header>
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v64</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v66</span></h1>
       </div>
 
       <div class="header-controls-row">
@@ -286,7 +286,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v64)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v66)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -300,7 +300,8 @@
     <div class="tracks-list" id="tracksList"></div>
   </div>
 
-  <script>
+  // Version: v66
+<script>
     const systemConfig = "RYU2026";
     let globalMembers = [];
     let availableProjects = [];
@@ -370,14 +371,14 @@
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       
-      // Indicateur visuel admin avec ta DA (rgba(146, 94, 98, ...)) et transparence ajustée
+      // Indicateur visuel du mode admin
       if (isAdminMode) {
         const appContent = document.getElementById("appContent");
         let adminBadge = document.getElementById("adminBadge");
         if (!adminBadge) {
           adminBadge = document.createElement("div");
           adminBadge.id = "adminBadge";
-          adminBadge.innerText = "👑 MODE ADMINISTRATEUR ACTIF 👑";
+          adminBadge.innerText = "👑 MODE ADMINISTRATEUR ACTIF";
           adminBadge.style.cssText = "font-family: 'Inter', sans-serif; background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; margin-bottom: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px;";
           appContent.insertBefore(adminBadge, appContent.firstChild);
         }
@@ -514,6 +515,49 @@
       keyDisplay.innerText = `(${finalKey})`;
     }
 
+    function updatePitchSelectOptions() {
+      const pitchSelect = document.getElementById("pitchSelect");
+      if (!pitchSelect) return;
+
+      const currentVal = currentPitchSemitones;
+      pitchSelect.innerHTML = "";
+
+      if (!currentProjectOriginalKey) {
+        for (let i = -12; i <= 12; i++) {
+          let opt = document.createElement("option");
+          opt.value = i;
+          opt.innerText = i > 0 ? `+${i}` : `${i}`;
+          pitchSelect.appendChild(opt);
+        }
+        pitchSelect.value = currentVal;
+        return;
+      }
+
+      let base = currentProjectOriginalKey.trim();
+      let isMinor = base.toLowerCase().includes('m') && !base.toLowerCase().includes('maj');
+      let rootNote = base.replace(/m.*$/, "").toUpperCase();
+      let baseIdx = parseNoteToSemitoneIndex(rootNote);
+
+      for (let i = -12; i <= 12; i++) {
+        let opt = document.createElement("option");
+        opt.value = i;
+        let semitoneStr = i > 0 ? `+${i}` : `${i}`;
+        
+        if (baseIdx !== -1) {
+          let newIdx = (baseIdx + i) % 12;
+          if (newIdx < 0) newIdx += 12;
+          let noteStr = chromaticNotes[newIdx] + (isMinor ? 'm' : '');
+          opt.innerText = `${semitoneStr} (${noteStr})`;
+        } else {
+          opt.innerText = semitoneStr;
+        }
+
+        pitchSelect.appendChild(opt);
+      }
+
+      pitchSelect.value = currentVal;
+    }
+
     function changePitch(semitones) {
       currentPitchSemitones = parseInt(semitones, 10);
       document.getElementById("pitchSelect").value = currentPitchSemitones;
@@ -571,7 +615,6 @@
     }
 
     async function switchProject(idx) {
-      // La boîte de dialogue ne s'affiche qu'en mode admin s'il y a des modifs
       if (isAdminMode && hasUnsavedChanges) {
         const confirmSwitch = confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment changer de morceau sans enregistrer ?");
         if (!confirmSwitch) {
@@ -605,6 +648,7 @@
         
         resetPitch();
         updateDynamicKeyDisplay();
+        updatePitchSelectOptions();
         resetTempo();
         
         status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
@@ -648,11 +692,11 @@
       
       const initialSemitones = calculateSemitoneDistance(currentProjectOriginalKey, defaultLeadTargetNote);
       changePitch(initialSemitones);
+      updatePitchSelectOptions();
       hasUnsavedChanges = false;
 
       const notesContainer = document.getElementById("notes-container");
       const notesText = document.getElementById("notes-text");
-      const headerContainer = document.querySelector('header') || notesContainer.parentNode;
       let saveBtn = document.getElementById('saveAdminBtn');
 
       const hasNotes = (currentProjectInfo.Notes && currentProjectInfo.Notes.trim().length > 0) || isAdminMode;
@@ -660,7 +704,7 @@
       if (hasNotes) {
         notesContainer.style.display = "block";
         if (isAdminMode) {
-          notesText.innerHTML = `<textarea id="notesInput" ${isAdminMode ? 'oninput="hasUnsavedChanges = true;"' : 'readonly'} style="width: 100%; min-height: 60px; background: rgba(255,255,255,0.08); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; font-family: inherit; font-size: 14px;">${currentProjectInfo.Notes || ''}</textarea>`;
+          notesText.innerHTML = `<textarea id="notesInput" oninput="hasUnsavedChanges = true;" style="width: 100%; min-height: 60px; background: rgba(255,255,255,0.08); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; font-family: inherit; font-size: 14px;">${currentProjectInfo.Notes || ''}</textarea>`;
           
           if (!saveBtn) {
             saveBtn = document.createElement('button');
@@ -675,7 +719,7 @@
             saveBtn.style.display = 'block';
           }
         } else {
-          notesText.textContent = currentProjectInfo.Notes || '';
+          notesText.innerHTML = `<textarea id="notesInput" readonly style="width: 100%; min-height: 60px; background: rgba(255,255,255,0.08); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; font-family: inherit; font-size: 14px;">${currentProjectInfo.Notes || ''}</textarea>`;
           if (saveBtn) saveBtn.style.display = 'none';
         }
       } else {
@@ -1163,6 +1207,6 @@
     };
     window.addEventListener("touchstart", startVideoOnTouch, { once: true });
     window.addEventListener("click", startVideoOnTouch, { once: true });
-  </script>
+</script>
 </body>
 </html>
