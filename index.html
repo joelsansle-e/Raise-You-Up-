@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v61)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v62)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -36,17 +36,17 @@
     }
 
     #bg-video {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    object-fit: cover;
-    object-position: center;
-    z-index: -1;
-    pointer-events: none;
-    user-select: none;
-  }
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      object-position: center;
+      z-index: -1;
+      pointer-events: none;
+      user-select: none;
+    }
     
     #sysContainer {
       position: fixed;
@@ -138,8 +138,8 @@
 
     .header-controls-row { width: 100%; display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 12px; }
     
-    select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; cursor: pointer; max-width: 100%; }
-    select option { background-color: #131b2e; color: #ffffff; }
+    select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; cursor: pointer; max-width: 100%; text-transform: capitalize; }
+    select option { background-color: #131b2e; color: #ffffff; text-transform: capitalize; }
     
     .control-group { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-dim); flex-wrap: wrap; justify-content: center; }
     .btn-step { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text); width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; }
@@ -182,7 +182,7 @@
     .tracks-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     
     .track-row { display: flex; flex-direction: column; gap: 12px; padding: 15px; }
-    .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; display: flex; align-items: center; gap: 8px; }
+    .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; display: flex; align-items: center; gap: 8px; text-transform: capitalize; }
     .track-controls { width: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
     
     input[type=range] { -webkit-appearance: none; flex: 1; min-width: 90px; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
@@ -208,711 +208,773 @@
 </head>
 <body>
   <video autoplay muted loop playsinline webkit-playsinline id="bg-video" poster="bg-pingu.jpg">
-  <source src="bg-pingu.mp4" type="video/mp4">
-</video>
-<div id="sysContainer">
-  <div class="sys-card">
-    <h2>🎤 Raise You Up! <span class="version-badge">v61</span></h2>
-    <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
-    <div class="input-wrapper">
-      <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
-      <button type="button" class="toggle-view" onclick="toggleViewMode()" title="Afficher/Masquer">
-        <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-      </button>
+    <source src="bg-pingu.mp4" type="video/mp4">
+  </video>
+  
+  <div id="sysContainer">
+    <div class="sys-card">
+      <h2>🎤 Raise You Up! <span class="version-badge">v62</span></h2>
+      <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
+      <div class="input-wrapper">
+        <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
+        <button type="button" class="toggle-view" onclick="toggleViewMode()" title="Afficher/Masquer">
+          <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+      <button class="btn-exec" onclick="initSession()">Valider</button>
+      <div id="sysAlert">Mot de passe incorrect</div>
     </div>
-    <button class="btn-exec" onclick="initSession()">Valider</button>
-    <div id="sysAlert">Mot de passe incorrect</div>
   </div>
-</div>
 
-<div id="appContent">
-  <header>
-    <div class="header-title-row">
-      <h1>🎤 Raise You Up! <span class="version-badge">v61</span></h1>
-    </div>
+  <div id="appContent">
+    <header>
+      <div class="header-title-row">
+        <h1>🎤 Raise You Up! <span class="version-badge">v62</span></h1>
+      </div>
 
-    <!-- Zone de notes optionnelle -->
-    <div id="notes-container" class="notes-box">
-      <strong>💡 Note : </strong><span id="notes-text"></span>
-    </div>
+      <!-- Zone de notes au pluriel -->
+      <div id="notes-container" class="notes-box">
+        <strong>💡 Notes : </strong><span id="notes-text"></span>
+      </div>
 
-    <div class="header-controls-row">
-      <select id="projectSelect" onchange="switchProject(this.value)">
-        <option value="">-- Choisir un morceau --</option>
-      </select>
-
-      <div class="control-group">
-        <span>Tonalité :</span>
-        <button class="btn-step" onclick="stepPitch(-1)">-</button>
-        <select id="pitchSelect" onchange="changePitch(this.value)">
-          <option value="-12">-12 (-1 oct.)</option>
-          <option value="-11">-11</option>
-          <option value="-10">-10</option>
-          <option value="-9">-9</option>
-          <option value="-8">-8</option>
-          <option value="-7">-7</option>
-          <option value="-6">-6</option>
-          <option value="-5">-5</option>
-          <option value="-4">-4</option>
-          <option value="-3">-3</option>
-          <option value="-2">-2</option>
-          <option value="-1">-1</option>
-          <option value="0" selected>Original (0)</option>
-          <option value="1">+1</option>
-          <option value="2">+2</option>
-          <option value="3">+3</option>
-          <option value="4">+4</option>
-          <option value="5">+5</option>
-          <option value="6">+6</option>
-          <option value="7">+7</option>
-          <option value="8">+8</option>
-          <option value="9">+9</option>
-          <option value="10">+10</option>
-          <option value="11">+11</option>
-          <option value="12">+12 (+1 oct.)</option>
+      <div class="header-controls-row">
+        <select id="projectSelect" onchange="switchProject(this.value)">
+          <option value="">-- Choisir un morceau --</option>
         </select>
-        <button class="btn-step" onclick="stepPitch(1)">+</button>
-        <button class="btn-reset" onclick="resetPitch()">RESET</button>
-        <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); min-width: 65px;"></span>
-      </div>
 
-      <div class="control-group">
-        <span>Tempo :</span>
-        <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
-        <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
-        <button class="btn-reset" onclick="resetTempo()">RESET</button>
+        <div class="control-group">
+          <span>Tonalité :</span>
+          <button class="btn-step" onclick="stepPitch(-1)">-</button>
+          <select id="pitchSelect" onchange="changePitch(this.value)">
+            <option value="-12">-12 (-1 oct.)</option>
+            <option value="-11">-11</option>
+            <option value="-10">-10</option>
+            <option value="-9">-9</option>
+            <option value="-8">-8</option>
+            <option value="-7">-7</option>
+            <option value="-6">-6</option>
+            <option value="-5">-5</option>
+            <option value="-4">-4</option>
+            <option value="-3">-3</option>
+            <option value="-2">-2</option>
+            <option value="-1">-1</option>
+            <option value="0" selected>Original (0)</option>
+            <option value="1">+1</option>
+            <option value="2">+2</option>
+            <option value="3">+3</option>
+            <option value="4">+4</option>
+            <option value="5">+5</option>
+            <option value="6">+6</option>
+            <option value="7">+7</option>
+            <option value="8">+8</option>
+            <option value="9">+9</option>
+            <option value="10">+10</option>
+            <option value="11">+11</option>
+            <option value="12">+12 (+1 oct.)</option>
+          </select>
+          <button class="btn-step" onclick="stepPitch(1)">+</button>
+          <button class="btn-reset" onclick="resetPitch()">RESET</button>
+          <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); min-width: 65px;"></span>
+        </div>
+
+        <div class="control-group">
+          <span>Tempo :</span>
+          <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
+          <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
+          <button class="btn-reset" onclick="resetTempo()">RESET</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="player-card">
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v62)</div>
+      <div class="controls-row">
+        <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
+        <button class="play-btn" id="playBtn" disabled>▶</button>
+        <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
+        <div class="timeline" id="timeline">
+          <div class="timeline-progress" id="progress"></div>
+          <div class="timeline-thumb" id="thumb"></div>
+        </div>
       </div>
     </div>
-  </header>
-
-  <div class="player-card">
-    <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v61)</div>
-    <div class="controls-row">
-      <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
-      <button class="play-btn" id="playBtn" disabled>▶</button>
-      <div class="time-display" id="timeDisplay">00:00 / 00:00</div>
-      <div class="timeline" id="timeline">
-        <div class="timeline-progress" id="progress"></div>
-        <div class="timeline-thumb" id="thumb"></div>
-      </div>
-    </div>
+    <div class="tracks-list" id="tracksList"></div>
   </div>
-  <div class="tracks-list" id="tracksList"></div>
-</div>
 
-<script>
-  const systemConfig = "RYU2026";
+  <script>
+    const systemConfig = "RYU2026";
+    let globalMembers = [];
+    let availableProjects = [];
+    let currentProjectInfo = {};
+    let currentProjectOriginalKey = "";
+    
+    const chromaticNotes = [
+      'C', 'Db / C#', 'D', 'Eb / D#', 'E', 'F', 'Gb / F#', 'G', 'Ab / G#', 'A', 'Bb / A#', 'B'
+    ];
 
-  function toggleViewMode() {
-    const field = document.getElementById("appConfigInput");
-    const icon = document.getElementById("eyeIcon");
-    if (field.type === "password") {
-      field.type = "text";
-      icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
-    } else {
-      field.type = "password";
-      icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
+    const select = document.getElementById("projectSelect");
+    const playBtn = document.getElementById("playBtn");
+    const rewindBtn = document.getElementById("rewindBtn");
+    const status = document.getElementById("status");
+
+    function capitalize(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
     }
-  }
 
-  async function initSession() {
-    const val = document.getElementById("appConfigInput").value.trim();
-    if (val === systemConfig) {
-      const bgVid = document.getElementById("bg-video");
-      if (bgVid) {
-        bgVid.play().catch(e => console.log("Vidéo bloquée par économie d'énergie iOS", e));
+    function toggleViewMode() {
+      const field = document.getElementById("appConfigInput");
+      const icon = document.getElementById("eyeIcon");
+      if (field.type === "password") {
+        field.type = "text";
+        icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
+      } else {
+        field.type = "password";
+        icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
       }
+    }
 
-      if (typeof Tone !== 'undefined') {
-        await Tone.start();
-        if (Tone.context && Tone.context.rawContext) {
-          try { Tone.context.rawContext.resume(); } catch(e) {}
+    async function initSession() {
+      const val = document.getElementById("appConfigInput").value.trim();
+      if (val === systemConfig) {
+        const bgVid = document.getElementById("bg-video");
+        if (bgVid) {
+          bgVid.play().catch(e => console.log("Vidéo bloquée par économie d'énergie iOS", e));
+        }
+
+        if (typeof Tone !== 'undefined') {
+          await Tone.start();
+          if (Tone.context && Tone.context.rawContext) {
+            try { Tone.context.rawContext.resume(); } catch(e) {}
+          }
+        }
+
+        document.getElementById("sysContainer").style.display = "none";
+        document.getElementById("appContent").style.display = "flex";
+        
+        await loadMembers();
+        loadPlaylist();
+      } else {
+        document.getElementById("sysAlert").style.display = "block";
+      }
+    }
+
+    document.getElementById("appConfigInput").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") initSession();
+    });
+
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
+        e.preventDefault();
+        return false;
+      }
+      if (e.code === 'Space' || e.key === ' ') {
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+          return;
+        }
+        e.preventDefault();
+        if (!playBtn.disabled) {
+          togglePlay();
         }
       }
+    });
 
-      document.getElementById("sysContainer").style.display = "none";
-      document.getElementById("appContent").style.display = "flex";
-      loadPlaylist();
-    } else {
-      document.getElementById("sysAlert").style.display = "block";
+    function decodeBase64(str) {
+      if (!str) return '';
+      try {
+        return decodeURIComponent(escape(window.atob(str)));
+      } catch (e) {
+        return str;
+      }
     }
-  }
 
-  document.getElementById("appConfigInput").addEventListener("keypress", (e) => {
-    if (e.key === "Enter") initSession();
-  });
-
-  document.addEventListener('contextmenu', event => event.preventDefault());
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'U')) {
-      e.preventDefault();
-      return false;
+    async function loadMembers() {
+      try {
+        const res = await fetch('./membres.txt?v=' + new Date().getTime());
+        if (res.ok) {
+          const text = await res.text();
+          globalMembers = text.split('\n').map(m => m.trim()).filter(m => m.length > 0);
+        }
+      } catch(e) {
+        console.log("Impossible de charger membres.txt, utilisation d'une liste par défaut", e);
+      }
+      if (globalMembers.length === 0) {
+        globalMembers = ["nehla", "celia", "nathan"];
+      }
     }
-  });
 
-  function decodeBase64(str) {
-    if (!str) return '';
-    try {
-      return decodeURIComponent(escape(window.atob(str)));
-    } catch (e) {
-      return str;
+    async function loadPlaylist() {
+      try {
+        const res = await fetch('./playlist.json?v=' + new Date().getTime());
+        if (!res.ok) throw new Error("Fichier playlist.json non trouvé");
+        const data = await res.json();
+        availableProjects = Array.isArray(data) ? data : (data.projects || [data]);
+        
+        select.innerHTML = '<option value="">-- Choisir un morceau --</option>';
+        if (availableProjects.length > 0) {
+          availableProjects.forEach((p, idx) => {
+            let opt = document.createElement("option");
+            opt.value = idx;
+            
+            let rawFolder = p.folder || p.path || '';
+            let decodedFolder = decodeBase64(rawFolder);
+            let folderNameOnly = decodedFolder.split('/').pop();
+            
+            let cleanTitle = folderNameOnly.replace(/__(?:Key-)?([A-G][b\#]?m?)/i, "").replace(/_/g, " ").trim();
+            
+            opt.innerText = cleanTitle || folderNameOnly;
+            select.appendChild(opt);
+          });
+          status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
+        } else {
+          status.innerText = "Aucun morceau trouvé dans la playlist.";
+        }
+      } catch(err) {
+        console.error(err);
+        status.innerText = "Erreur de chargement du fichier playlist.json";
+      }
     }
-  }
 
-  let availableProjects = [];
-  let currentProjectOriginalKey = "";
-  const select = document.getElementById("projectSelect");
-  const playBtn = document.getElementById("playBtn");
-  const rewindBtn = document.getElementById("rewindBtn");
-  const status = document.getElementById("status");
+    let tracks = [], isPlaying = false, pauseOffset = 0, duration = 0;
+    let playStartRealTime = 0;
+    let currentPitchSemitones = 0;
+    let currentTempoRatio = 1.0;
 
-  const chromaticNotes = [
-    'C', 'Db / C#', 'D', 'Eb / D#', 'E', 'F', 'Gb / F#', 'G', 'Ab / G#', 'A', 'Bb / A#', 'B'
-  ];
+    function parseNoteToSemitoneIndex(noteStr) {
+      if (!noteStr) return -1;
+      let clean = noteStr.trim().replace(/m.*$/, "").toUpperCase();
+      return chromaticNotes.findIndex(item => {
+        let parts = item.split(' / ');
+        return parts.some(p => p.toUpperCase() === clean);
+      });
+    }
 
-  window.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' || e.key === ' ') {
-      if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'SELECT')) {
+    function calculateSemitoneDistance(fromNote, toNote) {
+      let idx1 = parseNoteToSemitoneIndex(fromNote);
+      let idx2 = parseNoteToSemitoneIndex(toNote);
+      if (idx1 === -1 || idx2 === -1) return 0;
+      let diff = idx2 - idx1;
+      if (diff > 6) diff -= 12;
+      if (diff < -6) diff += 12;
+      return diff;
+    }
+
+    function updateDynamicKeyDisplay() {
+      const keyDisplay = document.getElementById("currentKeyDisplay");
+      if (!currentProjectOriginalKey) {
+        keyDisplay.innerText = "";
         return;
       }
-      e.preventDefault();
-      if (!playBtn.disabled) {
-        togglePlay();
-      }
-    }
-  });
-
-  async function loadPlaylist() {
-    try {
-      const res = await fetch('./playlist.json?v=' + new Date().getTime());
-      if (!res.ok) throw new Error("Fichier playlist.json non trouvé");
-      const data = await res.json();
-      availableProjects = Array.isArray(data) ? data : (data.projects || [data]);
       
-      select.innerHTML = '<option value="">-- Choisir un morceau --</option>';
-      if (availableProjects.length > 0) {
-        availableProjects.forEach((p, idx) => {
-          let opt = document.createElement("option");
-          opt.value = idx;
-          
-          let rawFolder = p.folder || p.path || p.title || p.name || `Morceau ${idx + 1}`;
-          let decodedFolder = decodeBase64(rawFolder);
-          
-          let cleanTitle = decodedFolder.replace(/__(?:Key-)?([A-G][b\#]?m?)/i, "").replace(/_/g, " ").trim();
-          
-          opt.innerText = cleanTitle || decodedFolder;
-          select.appendChild(opt);
-        });
+      let base = currentProjectOriginalKey.trim();
+      let isMinor = base.toLowerCase().includes('m') && !base.toLowerCase().includes('maj');
+      let rootNote = base.replace(/m.*$/, "").toUpperCase();
+      
+      let idx = parseNoteToSemitoneIndex(rootNote);
+      if (idx === -1) {
+        keyDisplay.innerText = `(${currentProjectOriginalKey})`;
+        return;
+      }
+
+      let newIdx = (idx + currentPitchSemitones) % 12;
+      if (newIdx < 0) newIdx += 12;
+      
+      let transposedNoteStr = chromaticNotes[newIdx].split(' / ')[0];
+      let finalKey = transposedNoteStr + (isMinor ? 'm' : '');
+      keyDisplay.innerText = `(${finalKey})`;
+    }
+
+    function changePitch(semitones) {
+      currentPitchSemitones = parseInt(semitones, 10);
+      document.getElementById("pitchSelect").value = currentPitchSemitones;
+      tracks.forEach(t => {
+        if (t.player) {
+          t.player.detune = currentPitchSemitones * 100;
+        }
+      });
+      updateDynamicKeyDisplay();
+    }
+
+    function stepPitch(delta) {
+      let newVal = currentPitchSemitones + delta;
+      if (newVal < -12) newVal = -12;
+      if (newVal > 12) newVal = 12;
+      changePitch(newVal);
+    }
+
+    function resetPitch() { changePitch(0); }
+
+    function changeTempo(val) {
+      currentTempoRatio = parseFloat(val);
+      document.getElementById("tempoSlider").value = currentTempoRatio;
+      document.getElementById("tempoLabel").innerText = `${Math.round(currentTempoRatio * 100)}%`;
+      tracks.forEach(t => {
+        if (t.player) {
+          t.player.playbackRate = currentTempoRatio;
+        }
+      });
+    }
+
+    function resetTempo() { changeTempo(1.0); }
+
+    function fetchAudioBuffer(url) {
+      return new Promise((resolve, reject) => {
+        const buffer = new Tone.ToneAudioBuffer(url, () => resolve(buffer), (err) => reject(err));
+      });
+    }
+
+    function parseInfoTxt(text) {
+      const config = {};
+      const lines = text.split('\n');
+      lines.forEach(line => {
+        const parts = line.split(':');
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          const value = parts.slice(1).join(':').trim();
+          config[key] = value;
+        }
+      });
+      return config;
+    }
+
+    async function switchProject(idx) {
+      if (idx === "") {
+        stopAllSources();
+        isPlaying = false;
+        pauseOffset = 0;
+        duration = 0;
+        tracks = [];
+        currentProjectOriginalKey = "";
+        currentProjectInfo = {};
+        
+        playBtn.innerText = "▶";
+        playBtn.disabled = true;
+        rewindBtn.disabled = true;
+        document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
+        document.getElementById("progress").style.width = "0%";
+        document.getElementById("tracksList").innerHTML = "";
+        document.getElementById("notes-container").style.display = "none";
+        
+        resetPitch();
+        updateDynamicKeyDisplay();
+        resetTempo();
+        
         status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
-      } else {
-        status.innerText = "Aucun morceau trouvé dans la playlist.";
+        return;
       }
-    } catch(err) {
-      console.error(err);
-      status.innerText = "Erreur de chargement du fichier playlist.json";
-    }
-  }
 
-  let tracks = [], isPlaying = false, pauseOffset = 0, duration = 0;
-  let playStartRealTime = 0;
-  let currentPitchSemitones = 0;
-  let currentTempoRatio = 1.0;
-
-  function updateDynamicKeyDisplay() {
-    const keyDisplay = document.getElementById("currentKeyDisplay");
-    if (!currentProjectOriginalKey) {
-      keyDisplay.innerText = "";
-      return;
-    }
-    
-    let base = currentProjectOriginalKey.trim();
-    let isMinor = base.toLowerCase().includes('m') && !base.toLowerCase().includes('maj');
-    let rootNote = base.replace(/m.*$/, "").toUpperCase();
-    
-    let idx = chromaticNotes.findIndex(item => {
-      let parts = item.split(' / ');
-      return parts.some(p => p.toUpperCase() === rootNote);
-    });
-
-    if (idx === -1) {
-      keyDisplay.innerText = `(${currentProjectOriginalKey})`;
-      return;
-    }
-
-    let newIdx = (idx + currentPitchSemitones) % 12;
-    if (newIdx < 0) newIdx += 12;
-    
-    let transposedNoteStr = chromaticNotes[newIdx];
-    let finalKey = transposedNoteStr + (isMinor ? 'm' : '');
-    keyDisplay.innerText = `(${finalKey})`;
-  }
-
-  function changePitch(semitones) {
-    currentPitchSemitones = parseInt(semitones, 10);
-    document.getElementById("pitchSelect").value = currentPitchSemitones;
-    tracks.forEach(t => {
-      if (t.player) {
-        t.player.detune = currentPitchSemitones * 100;
-      }
-    });
-    updateDynamicKeyDisplay();
-  }
-
-  function stepPitch(delta) {
-    let newVal = currentPitchSemitones + delta;
-    if (newVal < -12) newVal = -12;
-    if (newVal > 12) newVal = 12;
-    changePitch(newVal);
-  }
-
-  function resetPitch() { changePitch(0); }
-
-  function changeTempo(val) {
-    currentTempoRatio = parseFloat(val);
-    document.getElementById("tempoSlider").value = currentTempoRatio;
-    document.getElementById("tempoLabel").innerText = `${Math.round(currentTempoRatio * 100)}%`;
-    tracks.forEach(t => {
-      if (t.player) {
-        t.player.playbackRate = currentTempoRatio;
-      }
-    });
-  }
-
-  function resetTempo() { changeTempo(1.0); }
-
-  function fetchAudioBuffer(url) {
-    return new Promise((resolve, reject) => {
-      const buffer = new Tone.ToneAudioBuffer(url, () => resolve(buffer), (err) => reject(err));
-    });
-  }
-
-  // Parseur pour le fichier info.txt
-  function parseInfoTxt(text) {
-    const config = {};
-    const lines = text.split('\n');
-    lines.forEach(line => {
-      const parts = line.split(':');
-      if (parts.length >= 2) {
-        const key = parts[0].trim();
-        const value = parts.slice(1).join(':').trim();
-        config[key] = value;
-      }
-    });
-    return config;
-  }
-
-  async function switchProject(idx) {
-    if (idx === "") {
       stopAllSources();
       isPlaying = false;
       pauseOffset = 0;
-      duration = 0;
-      tracks = [];
-      currentProjectOriginalKey = "";
-      
+      playStartRealTime = 0;
       playBtn.innerText = "▶";
       playBtn.disabled = true;
       rewindBtn.disabled = true;
       document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
       document.getElementById("progress").style.width = "0%";
-      document.getElementById("tracksList").innerHTML = "";
-      document.getElementById("notes-container").style.display = "none";
       
-      resetPitch();
-      updateDynamicKeyDisplay();
-      resetTempo();
-      
-      status.innerText = "Sélectionnez un morceau dans le menu ci-dessus";
-      return;
-    }
+      const proj = availableProjects[idx];
+      let rawFolder = proj.folder || proj.path || '';
+      let folderName = decodeBase64(rawFolder);
 
-    stopAllSources();
-    isPlaying = false;
-    pauseOffset = 0;
-    playStartRealTime = 0;
-    playBtn.innerText = "▶";
-    playBtn.disabled = true;
-    rewindBtn.disabled = true;
-    document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
-    document.getElementById("progress").style.width = "0%";
-    
-    const proj = availableProjects[idx];
-    
-    let rawFolder = proj.folder || proj.path || '';
-    let folderName = decodeBase64(rawFolder);
-
-    // Chargement optionnel de info.txt
-    let infoConfig = {};
-    try {
-      let infoUrl = folderName ? `${folderName}/info.txt` : `info.txt`;
-      infoUrl = infoUrl.split('/').map(part => encodeURIComponent(part)).join('/');
-      const infoRes = await fetch(infoUrl + '?v=' + new Date().getTime());
-      if (infoRes.ok) {
-        const infoText = await infoRes.text();
-        infoConfig = parseInfoTxt(infoText);
-      }
-    } catch(e) {
-      console.log("Pas de fichier info.txt ou erreur de lecture", e);
-    }
-
-    // La tonalité vient désormais exclusivement de info.txt (ou de la playlist)
-    currentProjectOriginalKey = infoConfig.OriginalKey || proj.key || proj.originalKey || "";
-
-    resetPitch();
-    if (infoConfig.LeadKey && currentProjectOriginalKey) {
-      // Optionnel : si LeadKey est défini, on pourrait calculer l'écart, mais gardons la logique standard
-    }
-    updateDynamicKeyDisplay();
-
-    // Affichage des notes
-    const notesContainer = document.getElementById("notes-container");
-    const notesText = document.getElementById("notes-text");
-    if (infoConfig.Notes && infoConfig.Notes.trim().length > 0) {
-      notesText.textContent = infoConfig.Notes;
-      notesContainer.style.display = "block";
-    } else {
-      notesContainer.style.display = "none";
-    }
-
-    status.innerText = "Chargement des pistes en cours...";
-
-    if (typeof Tone !== 'undefined') {
-      await Tone.start();
-    }
-
-    tracks = [];
-    const listContainer = document.getElementById("tracksList");
-    listContainer.innerHTML = "";
-
-    duration = 0;
-    
-    const trackListObj = proj.tracks || proj.files || proj.items || [];
-    let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
-
-    if (trackFiles.length === 0) {
-      status.innerText = "Erreur : aucune piste trouvée dans ce projet.";
-      return;
-    }
-
-    let loaded = 0;
-    for (let i = 0; i < trackFiles.length; i++) {
-      let rawFile = trackFiles[i];
-      if (typeof rawFile === 'object' && rawFile !== null) {
-        rawFile = rawFile.name || rawFile.file || rawFile.filename || '';
-      }
-      
-      let filePath = decodeBase64(String(rawFile).trim());
-      const fileNameOnly = filePath.split('/').pop();
-      const trackName = fileNameOnly.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
-      
-      let urlWithFolder = folderName ? `${folderName}/${filePath}` : filePath;
-      urlWithFolder = urlWithFolder.split('/').map(part => encodeURIComponent(part)).join('/');
-      let urlDirect = encodeURIComponent(fileNameOnly);
-
-      let loadedBuffer = null;
-
+      currentProjectInfo = {};
       try {
-        loadedBuffer = await fetchAudioBuffer(urlWithFolder);
-      } catch (e1) {
+        let infoUrl = folderName ? `${folderName}/info.txt` : `info.txt`;
+        infoUrl = infoUrl.split('/').map(part => encodeURIComponent(part)).join('/');
+        const infoRes = await fetch(infoUrl + '?v=' + new Date().getTime());
+        if (infoRes.ok) {
+          const infoText = await infoRes.text();
+          currentProjectInfo = parseInfoTxt(infoText);
+        }
+      } catch(e) {
+        console.log("Pas de fichier info.txt ou erreur de lecture", e);
+      }
+
+      currentProjectOriginalKey = currentProjectInfo.OriginalKey || "";
+      
+      const defaultLead = (currentProjectInfo.Lead || globalMembers[0] || "nehla").toLowerCase();
+      const leadKeyField = `Key_${capitalize(defaultLead)}`;
+      const defaultLeadTargetNote = currentProjectInfo[leadKeyField] || currentProjectOriginalKey;
+      
+      const initialSemitones = calculateSemitoneDistance(currentProjectOriginalKey, defaultLeadTargetNote);
+      changePitch(initialSemitones);
+
+      const notesContainer = document.getElementById("notes-container");
+      const notesText = document.getElementById("notes-text");
+      if (currentProjectInfo.Notes && currentProjectInfo.Notes.trim().length > 0) {
+        notesText.textContent = currentProjectInfo.Notes;
+        notesContainer.style.display = "block";
+      } else {
+        notesContainer.style.display = "none";
+      }
+
+      status.innerText = "Chargement des pistes en cours...";
+
+      if (typeof Tone !== 'undefined') {
+        await Tone.start();
+      }
+
+      tracks = [];
+      const listContainer = document.getElementById("tracksList");
+      listContainer.innerHTML = "";
+
+      duration = 0;
+      
+      const trackListObj = proj.tracks || [];
+      let trackFiles = Array.isArray(trackListObj) ? trackListObj : Object.values(trackListObj);
+
+      if (trackFiles.length === 0) {
+        status.innerText = "Erreur : aucune piste trouvée dans ce projet.";
+        return;
+      }
+
+      let loaded = 0;
+      for (let i = 0; i < trackFiles.length; i++) {
+        let rawFile = trackFiles[i];
+        if (typeof rawFile === 'object' && rawFile !== null) {
+          rawFile = rawFile.name || rawFile.file || rawFile.filename || '';
+        }
+        
+        let filePath = decodeBase64(String(rawFile).trim());
+        const fileNameOnly = filePath.split('/').pop();
+        const trackName = fileNameOnly.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
+        
+        let urlWithFolder = folderName ? `${folderName}/${filePath}` : filePath;
+        urlWithFolder = urlWithFolder.split('/').map(part => encodeURIComponent(part)).join('/');
+        let urlDirect = encodeURIComponent(fileNameOnly);
+
+        let loadedBuffer = null;
+
         try {
-          loadedBuffer = await fetchAudioBuffer(urlDirect);
-        } catch (e2) {
-          console.error("Impossible de charger la piste :", fileNameOnly);
+          loadedBuffer = await fetchAudioBuffer(urlWithFolder);
+        } catch (e1) {
+          try {
+            loadedBuffer = await fetchAudioBuffer(urlDirect);
+          } catch (e2) {
+            console.error("Impossible de charger la piste :", fileNameOnly);
+          }
+        }
+
+        if (loadedBuffer) {
+          let player = new Tone.GrainPlayer({
+            url: loadedBuffer,
+            grainSize: 0.2,
+            overlap: 0.1
+          });
+
+          player.playbackRate = currentTempoRatio;
+          player.detune = currentPitchSemitones * 100;
+
+          const volumeNode = new Tone.Volume(0).toDestination();
+          player.connect(volumeNode);
+
+          if (loadedBuffer.duration > duration) duration = loadedBuffer.duration;
+          loaded++;
+          status.innerText = `Chargement (${loaded}/${trackFiles.length})...`;
+
+          tracks.push({
+            name: trackName,
+            fileName: fileNameOnly.toLowerCase(),
+            player: player,
+            volumeNode: volumeNode,
+            baseVol: 1,
+            pre: false,
+            solo: false,
+            mute: false
+          });
         }
       }
 
-      if (loadedBuffer) {
-        let player = new Tone.GrainPlayer({
-          url: loadedBuffer,
-          grainSize: 0.2,
-          overlap: 0.1
-        });
-
-        player.playbackRate = currentTempoRatio;
-        player.detune = currentPitchSemitones * 100;
-
-        const volumeNode = new Tone.Volume(0).toDestination();
-        player.connect(volumeNode);
-
-        if (loadedBuffer.duration > duration) duration = loadedBuffer.duration;
-        loaded++;
-        status.innerText = `Chargement (${loaded}/${trackFiles.length})...`;
-
-        tracks.push({
-          name: trackName,
-          player: player,
-          volumeNode: volumeNode,
-          baseVol: 1,
-          pre: false,
-          solo: false,
-          mute: false
-        });
+      if (tracks.length === 0) {
+        status.innerText = "Erreur de chargement des pistes audio.";
+        return;
       }
-    }
 
-    if (tracks.length === 0) {
-      status.innerText = "Erreur de chargement des pistes audio.";
-      return;
-    }
+      const fixedRoles = [
+        { label: "🎛️ Instru", type: "instru", matchKey: "instru" },
+        { label: "🎤 Lead", type: "lead", configKey: "Lead", defaultVal: defaultLead, matchKey: "lead" },
+        { label: "✨ Soprano", type: "soprano", configKey: "Soprano", defaultVal: currentProjectInfo.Soprano || globalMembers[1] || "celia", matchKey: "soprano" },
+        { label: "🎸 Tenor", type: "tenor", configKey: "Tenor", defaultVal: currentProjectInfo.Tenor || globalMembers[2] || "nathan", matchKey: "tenor" }
+      ];
 
-    // Ordre fixe des pistes : Instru, Lead, Soprano, Tenor avec les emojis demandés
-    const fixedRoles = [
-      { label: "🎛️ instru", type: "instru" },
-      { label: "🎤 lead", type: "lead", configKey: "Lead", defaultVal: infoConfig.Lead || "nehla" },
-      { label: "✨ soprano", type: "soprano", configKey: "Soprano", defaultVal: infoConfig.Soprano || "celia" },
-      { label: "🎸 tenor", type: "tenor", configKey: "Tenor", defaultVal: infoConfig.Tenor || "nathan" }
-    ];
+      let orderedTracks = [];
+      fixedRoles.forEach(role => {
+        let foundIdx = tracks.findIndex(t => t.fileName.includes(`-${role.matchKey}`));
+        if (foundIdx !== -1) {
+          orderedTracks.push({ trackData: tracks[foundIdx], roleInfo: role });
+        }
+      });
 
-    tracks.forEach((t, i) => {
-      const roleInfo = fixedRoles[i] || { label: t.name, type: "other" };
-      const row = document.createElement("div");
-      row.className = "track-row";
+      tracks.forEach(t => {
+        if (!orderedTracks.some(ot => ot.trackData === t)) {
+          orderedTracks.push({ trackData: t, roleInfo: { label: capitalize(t.name), type: "other" } });
+        }
+      });
 
-      let nameHtml = `<div class="track-name">${roleInfo.label}</div>`;
-      
-      if (roleInfo.type === "lead" || roleInfo.type === "soprano" || roleInfo.type === "tenor") {
-        nameHtml = `
-          <div class="track-name" style="justify-content: space-between;">
-            <span>${roleInfo.label}</span>
-            <select class="role-select" data-role="${roleInfo.configKey}" onchange="updateDropdowns()">
-              <option value="nehla">nehla</option>
-              <option value="celia">celia</option>
-              <option value="nathan">nathan</option>
-            </select>
+      tracks = orderedTracks.map(ot => ot.trackData);
+
+      orderedTracks.forEach((item, i) => {
+        const roleInfo = item.roleInfo;
+        const row = document.createElement("div");
+        row.className = "track-row";
+
+        let nameHtml = `<div class="track-name">${roleInfo.label}</div>`;
+        
+        if (roleInfo.type === "lead" || roleInfo.type === "soprano" || roleInfo.type === "tenor") {
+          let optionsHtml = globalMembers.map(m => `<option value="${m}">${capitalize(m)}</option>`).join('');
+          nameHtml = `
+            <div class="track-name" style="justify-content: space-between;">
+              <span>${roleInfo.label}</span>
+              <select class="role-select" data-role="${roleInfo.configKey}" onchange="handleRoleChange(this)">
+                ${optionsHtml}
+              </select>
+            </div>
+          `;
+        }
+
+        row.innerHTML = `
+          ${nameHtml}
+          <div class="track-controls">
+            <input type="range" id="vol-range-${i}" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
+            <button class="btn-reset" onclick="resetVolume(${i})">RESET</button>
+            <span class="vol-label" id="vol-label-${i}">100%</span>
+            <div class="btn-group">
+              <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})" title="FOCUS">FOCUS</button>
+              <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})" title="Solo">S</button>
+              <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})" title="Mute">M</button>
+            </div>
           </div>
         `;
-      }
+        listContainer.appendChild(row);
 
-      row.innerHTML = `
-        ${nameHtml}
-        <div class="track-controls">
-          <input type="range" id="vol-range-${i}" min="0" max="1" step="0.01" value="1" oninput="setVolume(${i}, this.value)">
-          <button class="btn-reset" onclick="resetVolume(${i})">RESET</button>
-          <span class="vol-label" id="vol-label-${i}">100%</span>
-          <div class="btn-group">
-            <button class="btn-track" id="pre-${i}" onclick="togglePRE(${i})" title="FOCUS">FOCUS</button>
-            <button class="btn-track" id="solo-${i}" onclick="toggleSolo(${i})" title="Solo">S</button>
-            <button class="btn-track" id="mute-${i}" onclick="toggleMute(${i})" title="Mute">M</button>
-          </div>
-        </div>
-      `;
-      listContainer.appendChild(row);
-
-      // Assigner la valeur initiale du info.txt si le select existe
-      if (roleInfo.configKey) {
-        const selectEl = row.querySelector('.role-select');
-        if (selectEl && roleInfo.defaultVal) {
-          selectEl.value = roleInfo.defaultVal.toLowerCase();
-        }
-      }
-    });
-
-    updateDropdowns();
-
-    status.innerText = "Prêt à la lecture";
-    playBtn.disabled = false;
-    rewindBtn.disabled = false;
-  }
-
-  // Logique anti-doublons pour les menus déroulants de rôles
-  function updateDropdowns() {
-    const selects = document.querySelectorAll('.role-select');
-    const selectedValues = Array.from(selects).map(s => s.value);
-
-    selects.forEach(select => {
-      const currentValue = select.value;
-      const options = select.querySelectorAll('option');
-
-      options.forEach(option => {
-        const val = option.value;
-        if (selectedValues.includes(val) && val !== currentValue) {
-          option.style.display = 'none';
-        } else {
-          option.style.display = 'block';
+        if (roleInfo.configKey) {
+          const selectEl = row.querySelector('.role-select');
+          if (selectEl && roleInfo.defaultVal) {
+            selectEl.value = roleInfo.defaultVal.toLowerCase();
+          }
         }
       });
-    });
-  }
 
-  function playAll(offset = 0) {
-    stopAllSources();
-    playStartRealTime = Tone.now();
-    pauseOffset = offset;
-    
-    tracks.forEach(t => {
-      if (t.player && t.player.loaded) {
-        t.player.start(playStartRealTime, offset);
+      updateDropdowns();
+
+      status.innerText = "Prêt à la lecture";
+      playBtn.disabled = false;
+      rewindBtn.disabled = false;
+    }
+
+    function updateDropdowns() {
+      const selects = document.querySelectorAll('.role-select');
+      const selectedValues = Array.from(selects).map(s => s.value);
+
+      selects.forEach(select => {
+        const currentValue = select.value;
+        const options = select.querySelectorAll('option');
+
+        options.forEach(option => {
+          const val = option.value;
+          if (selectedValues.includes(val) && val !== currentValue) {
+            option.style.display = 'none';
+          } else {
+            option.style.display = 'block';
+          }
+        });
+      });
+    }
+
+    function handleRoleChange(selectElement) {
+      updateDropdowns();
+      const roleType = selectElement.getAttribute('data-role');
+      if (roleType === 'Lead') {
+        const newLead = selectElement.value;
+        const targetKeyField = `Key_${capitalize(newLead)}`;
+        const targetNote = currentProjectInfo[targetKeyField];
+        if (targetNote && currentProjectOriginalKey) {
+          const semitones = calculateSemitoneDistance(currentProjectOriginalKey, targetNote);
+          changePitch(semitones);
+        }
       }
-    });
-    updateMix();
-    isPlaying = true;
-    playBtn.innerText = "⏸";
-    status.innerText = "Lecture en cours...";
-  }
+    }
 
-  function stopAllSources() {
-    tracks.forEach(t => {
-      if (t.player) {
-        try { t.player.stop(); } catch(e){}
+    function playAll(offset = 0) {
+      stopAllSources();
+      playStartRealTime = Tone.now();
+      pauseOffset = offset;
+      
+      tracks.forEach(t => {
+        if (t.player && t.player.loaded) {
+          t.player.start(playStartRealTime, offset);
+        }
+      });
+      updateMix();
+      isPlaying = true;
+      playBtn.innerText = "⏸";
+      status.innerText = "Lecture en cours...";
+    }
+
+    function stopAllSources() {
+      tracks.forEach(t => {
+        if (t.player) {
+          try { t.player.stop(); } catch(e){}
+        }
+      });
+    }
+
+    async function togglePlay() {
+      if (typeof Tone !== 'undefined') await Tone.start();
+
+      if (isPlaying) {
+        const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
+        pauseOffset = Math.min(duration, pauseOffset + elapsed);
+        stopAllSources();
+        isPlaying = false;
+        playBtn.innerText = "▶";
+        status.innerText = "En pause";
+      } else {
+        if (pauseOffset >= duration) pauseOffset = 0;
+        playAll(pauseOffset);
       }
-    });
-  }
+    }
 
-  async function togglePlay() {
-    if (typeof Tone !== 'undefined') await Tone.start();
+    playBtn.onclick = togglePlay;
 
-    if (isPlaying) {
-      const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
-      pauseOffset = Math.min(duration, pauseOffset + elapsed);
+    rewindBtn.onclick = () => {
       stopAllSources();
       isPlaying = false;
+      pauseOffset = 0;
       playBtn.innerText = "▶";
-      status.innerText = "En pause";
-    } else {
-      if (pauseOffset >= duration) pauseOffset = 0;
-      playAll(pauseOffset);
+      status.innerText = "Retour au début";
+      document.getElementById("progress").style.width = "0%";
+      document.getElementById("timeDisplay").innerText = `00:00 / ${formatTime(duration)}`;
+    };
+
+    const timeline = document.getElementById("timeline");
+    const progress = document.getElementById("progress");
+    const thumb = document.getElementById("thumb");
+    let isDragging = false;
+
+    function getTargetTime(e) {
+      const rect = timeline.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+      return pos * duration;
     }
-  }
 
-  playBtn.onclick = togglePlay;
+    function updateTimelineUI(cur) {
+      if (duration <= 0) return;
+      const pct = (cur / duration) * 100;
+      progress.style.width = `${pct}%`;
+      thumb.style.left = `${pct}%`;
+      document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
+    }
 
-  rewindBtn.onclick = () => {
-    stopAllSources();
-    isPlaying = false;
-    pauseOffset = 0;
-    playBtn.innerText = "▶";
-    status.innerText = "Retour au début";
-    document.getElementById("progress").style.width = "0%";
-    document.getElementById("timeDisplay").innerText = `00:00 / ${formatTime(duration)}`;
-  };
-
-  const timeline = document.getElementById("timeline");
-  const progress = document.getElementById("progress");
-  const thumb = document.getElementById("thumb");
-  let isDragging = false;
-
-  function getTargetTime(e) {
-    const rect = timeline.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const pos = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
-    return pos * duration;
-  }
-
-  function updateTimelineUI(cur) {
-    if (duration <= 0) return;
-    const pct = (cur / duration) * 100;
-    progress.style.width = `${pct}%`;
-    thumb.style.left = `${pct}%`;
-    document.getElementById("timeDisplay").innerText = `${formatTime(cur)} / ${formatTime(duration)}`;
-  }
-
-  function startDrag(e) {
-    if (duration <= 0) return;
-    isDragging = true;
-    const targetTime = getTargetTime(e);
-    updateTimelineUI(targetTime);
-  }
-
-  function onDrag(e) {
-    if (!isDragging || duration <= 0) return;
-    const targetTime = getTargetTime(e);
-    updateTimelineUI(targetTime);
-  }
-
-  function endDrag(e) {
-    if (!isDragging) return;
-    isDragging = false;
-    const targetTime = getTargetTime(e.changedTouches ? { clientX: e.changedTouches[0].clientX } : e);
-    pauseOffset = targetTime;
-    if (isPlaying) {
-      playAll(targetTime);
-    } else {
+    function startDrag(e) {
+      if (duration <= 0) return;
+      isDragging = true;
+      const targetTime = getTargetTime(e);
       updateTimelineUI(targetTime);
     }
-  }
 
-  timeline.addEventListener("mousedown", startDrag);
-  window.addEventListener("mousemove", onDrag);
-  window.addEventListener("mouseup", endDrag);
+    function onDrag(e) {
+      if (!isDragging || duration <= 0) return;
+      const targetTime = getTargetTime(e);
+      updateTimelineUI(targetTime);
+    }
 
-  timeline.addEventListener("touchstart", startDrag, { passive: true });
-  window.addEventListener("touchmove", onDrag, { passive: true });
-  window.addEventListener("touchend", endDrag);
-
-  setInterval(() => {
-    if (isPlaying && duration > 0 && !isDragging) {
-      const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
-      const cur = Math.min(duration, pauseOffset + elapsed);
-      updateTimelineUI(cur);
-      if (cur >= duration) { 
-        stopAllSources(); 
-        isPlaying = false; 
-        pauseOffset = 0; 
-        playBtn.innerText = "▶"; 
-        status.innerText = "Terminé"; 
+    function endDrag(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      const targetTime = getTargetTime(e.changedTouches ? { clientX: e.changedTouches[0].clientX } : e);
+      pauseOffset = targetTime;
+      if (isPlaying) {
+        playAll(targetTime);
+      } else {
+        updateTimelineUI(targetTime);
       }
     }
-  }, 100);
 
-  function setVolume(i, v) { 
-    tracks[i].baseVol = parseFloat(v); 
-    const pct = Math.round(v * 100);
-    const label = document.getElementById(`vol-label-${i}`);
-    if (label) label.innerText = `${pct}%`;
-    updateMix(); 
-  }
+    timeline.addEventListener("mousedown", startDrag);
+    window.addEventListener("mousemove", onDrag);
+    window.addEventListener("mouseup", endDrag);
 
-  function resetVolume(i) {
-    tracks[i].baseVol = 1.0;
-    const slider = document.getElementById(`vol-range-${i}`);
-    if (slider) slider.value = 1.0;
-    const label = document.getElementById(`vol-label-${i}`);
-    if (label) label.innerText = `100%`;
-    updateMix();
-  }
+    timeline.addEventListener("touchstart", startDrag, { passive: true });
+    window.addEventListener("touchmove", onDrag, { passive: true });
+    window.addEventListener("touchend", endDrag);
 
-  function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
-  function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
-  function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
+    setInterval(() => {
+      if (isPlaying && duration > 0 && !isDragging) {
+        const elapsed = (Tone.now() - playStartRealTime) * currentTempoRatio;
+        const cur = Math.min(duration, pauseOffset + elapsed);
+        updateTimelineUI(cur);
+        if (cur >= duration) { 
+          stopAllSources(); 
+          isPlaying = false; 
+          pauseOffset = 0; 
+          playBtn.innerText = "▶"; 
+          status.innerText = "Terminé"; 
+        }
+      }
+    }, 100);
 
-  function updateMix() {
-    const hasSolo = tracks.some(t => t.solo);
-    const hasPre = tracks.some(t => t.pre);
-    tracks.forEach(t => {
-      let v = t.baseVol;
-      if (t.mute) v = 0;
-      else if (hasSolo) v = t.solo ? t.baseVol : 0;
-      else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
-      
-      const db = v === 0 ? -Infinity : 20 * Math.log10(v);
-      if (t.volumeNode) t.volumeNode.volume.value = db;
-    });
-  }
+    function setVolume(i, v) { 
+      tracks[i].baseVol = parseFloat(v); 
+      const pct = Math.round(v * 100);
+      const label = document.getElementById(`vol-label-${i}`);
+      if (label) label.innerText = `${pct}%`;
+      updateMix(); 
+    }
 
-  function formatTime(s) {
-    const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
-    return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
-  }
-  
-  document.addEventListener("DOMContentLoaded", () => {
-    const bgVid = document.getElementById("bg-video");
-    if (bgVid) {
-      bgVid.play().catch(error => {
-        console.log("Lecture automatique de la vidéo bloquée par le mobile, tentative de relance...", error);
+    function resetVolume(i) {
+      tracks[i].baseVol = 1.0;
+      const slider = document.getElementById(`vol-range-${i}`);
+      if (slider) slider.value = 1.0;
+      const label = document.getElementById(`vol-label-${i}`);
+      if (label) label.innerText = `100%`;
+      updateMix();
+    }
+
+    function togglePRE(i) { tracks[i].pre = !tracks[i].pre; document.getElementById(`pre-${i}`).classList.toggle("active-pre", tracks[i].pre); updateMix(); }
+    function toggleSolo(i) { tracks[i].solo = !tracks[i].solo; document.getElementById(`solo-${i}`).classList.toggle("active-solo", tracks[i].solo); updateMix(); }
+    function toggleMute(i) { tracks[i].mute = !tracks[i].mute; document.getElementById(`mute-${i}`).classList.toggle("active-mute", tracks[i].mute); updateMix(); }
+
+    function updateMix() {
+      const hasSolo = tracks.some(t => t.solo);
+      const hasPre = tracks.some(t => t.pre);
+      tracks.forEach(t => {
+        let v = t.baseVol;
+        if (t.mute) v = 0;
+        else if (hasSolo) v = t.solo ? t.baseVol : 0;
+        else if (hasPre) v = t.pre ? t.baseVol : t.baseVol * 0.2;
+        
+        const db = v === 0 ? -Infinity : 20 * Math.log10(v);
+        if (t.volumeNode) t.volumeNode.volume.value = db;
       });
     }
-  });
 
-  const startVideoOnTouch = () => {
-    const bgVid = document.getElementById("bg-video");
-    if (bgVid && bgVid.paused) {
-      bgVid.play().catch(() => {});
+    function formatTime(s) {
+      const mins = Math.floor(s / 60), secs = Math.floor(s % 60);
+      return `${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
     }
-    window.removeEventListener("touchstart", startVideoOnTouch);
-    window.removeEventListener("click", startVideoOnTouch);
-  };
-  window.addEventListener("touchstart", startVideoOnTouch, { once: true });
-  window.addEventListener("click", startVideoOnTouch, { once: true });
-</script>
+    
+    document.addEventListener("DOMContentLoaded", () => {
+      const bgVid = document.getElementById("bg-video");
+      if (bgVid) {
+        bgVid.play().catch(error => {
+          console.log("Lecture automatique de la vidéo bloquée par le mobile, tentative de relance...", error);
+        });
+      }
+    });
+
+    const startVideoOnTouch = () => {
+      const bgVid = document.getElementById("bg-video");
+      if (bgVid && bgVid.paused) {
+        bgVid.play().catch(() => {});
+      }
+      window.removeEventListener("touchstart", startVideoOnTouch);
+      window.removeEventListener("click", startVideoOnTouch);
+    };
+    window.addEventListener("touchstart", startVideoOnTouch, { once: true });
+    window.addEventListener("click", startVideoOnTouch, { once: true });
+  </script>
 </body>
 </html>
