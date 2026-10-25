@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v67)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v68)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -213,7 +213,7 @@
   
   <div id="sysContainer">
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v67</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v68</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -229,7 +229,7 @@
   <div id="appContent">
     <header>
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v67</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v68</span></h1>
       </div>
 
       <div class="header-controls-row">
@@ -286,7 +286,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v67)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v68)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -300,7 +300,7 @@
     <div class="tracks-list" id="tracksList"></div>
   </div>
 
-<script>
+  <script>
     const systemConfig = "RYU2026";
     let globalMembers = [];
     let availableProjects = [];
@@ -370,22 +370,69 @@
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       
-      // Indicateur visuel du mode admin
+      // Indicateur visuel du mode admin & Bouton de déconnexion unifié
+      const appContent = document.getElementById("appContent");
+      let topBar = document.getElementById("adminTopBar");
+      if (!topBar) {
+        topBar = document.createElement("div");
+        topBar.id = "adminTopBar";
+        topBar.style.cssText = "display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 10px;";
+        appContent.insertBefore(topBar, appContent.firstChild);
+      }
+
+      let adminBadge = document.getElementById("adminBadge");
+      if (!adminBadge) {
+        adminBadge = document.createElement("div");
+        adminBadge.id = "adminBadge";
+        adminBadge.style.cssText = "flex-grow: 1; font-family: 'Inter', sans-serif; background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px;";
+        topBar.appendChild(adminBadge);
+      }
+
       if (isAdminMode) {
-        const appContent = document.getElementById("appContent");
-        let adminBadge = document.getElementById("adminBadge");
-        if (!adminBadge) {
-          adminBadge = document.createElement("div");
-          adminBadge.id = "adminBadge";
-          adminBadge.innerText = "👑 MODE ADMINISTRATEUR ACTIF";
-          adminBadge.style.cssText = "font-family: 'Inter', sans-serif; background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; margin-bottom: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px;";
-          appContent.insertBefore(adminBadge, appContent.firstChild);
-        }
+        adminBadge.innerText = "👑 MODE ADMINISTRATEUR ACTIF";
+        adminBadge.style.display = "block";
+      } else {
+        adminBadge.style.display = "none"; // Optionnel : masque le badge en mode visiteur ou affiche "Mode Visiteur"
+      }
+
+      let logoutBtn = document.getElementById("logoutBtn");
+      if (!logoutBtn) {
+        logoutBtn = document.createElement("button");
+        logoutBtn.id = "logoutBtn";
+        logoutBtn.innerText = "🚪 Déconnexion";
+        logoutBtn.style.cssText = "font-family: 'Inter', sans-serif; padding: 10px 16px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); color: white; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: background 0.2s; white-space: nowrap;";
+        logoutBtn.onmouseover = () => logoutBtn.style.background = "rgba(255, 255, 255, 0.2)";
+        logoutBtn.onmouseout = () => logoutBtn.style.background = "rgba(255, 255, 255, 0.1)";
+        logoutBtn.onclick = logoutToSession;
+        topBar.appendChild(logoutBtn);
       }
       
       console.log(message);
       await loadMembers();
       loadPlaylist();
+    }
+
+    function logoutToSession() {
+      if (isAdminMode && hasUnsavedChanges) {
+        const confirmLogout = confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment vous déconnecter sans enregistrer ?");
+        if (!confirmLogout) return;
+      }
+
+      stopAllSources();
+      isPlaying = false;
+      pauseOffset = 0;
+      duration = 0;
+      tracks = [];
+      currentProjectOriginalKey = "";
+      currentProjectInfo = {};
+      hasUnsavedChanges = false;
+      isAdminMode = false;
+      githubToken = "";
+
+      document.getElementById("appConfigInput").value = "";
+      document.getElementById("sysAlert").style.display = "none";
+      document.getElementById("appContent").style.display = "none";
+      document.getElementById("sysContainer").style.display = "flex";
     }
 
     document.getElementById("appConfigInput").addEventListener("keypress", (e) => {
