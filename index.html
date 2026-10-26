@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v80)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v81)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -261,6 +261,7 @@
     }
     .btn-reset:hover { background: var(--primary); color: #fff; }
 
+    /* Conteneur unique et propre pour les notes */
     .notes-box {
       background: #1a1214;
       border-left: 4px solid var(--primary);
@@ -273,6 +274,18 @@
       border-top: none;
       border-right: none;
       border-bottom: none;
+    }
+
+    /* Si l'élément à l'intérieur est un textarea en mode lecture seule ou visiteur, on retire sa bordure et son fond */
+    .notes-box textarea, .notes-box .notes-content {
+      background: transparent;
+      border: none;
+      color: inherit;
+      width: 100%;
+      resize: none;
+      outline: none;
+      font-family: inherit;
+      font-size: inherit;
     }
 
     .player-card { display: flex; flex-direction: column; gap: 15px; }
@@ -472,7 +485,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v80</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v81</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -503,70 +516,70 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v80</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v81</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
 
       <div class="header-controls-row">
-  <!-- 1. Bloc Sélection du morceau -->
-  <div class="control-group-vertical col-project">
-    <div class="control-group-horizontal">
-      <select id="projectSelect" onchange="switchProject(this.value)">
-        <option value="">-- Choisir un morceau --</option>
-      </select>
-    </div>
-    <div class="reset-sub-row mobile-hide" style="visibility: hidden;">
-      <button class="btn-reset">placeholder</button>
-    </div>
-  </div>
-
-  <!-- 2. Bloc Tonalité -->
-  <div class="control-group-vertical col-pitch">
-    <div class="control-group-horizontal">
-      <span class="label-no-break">Tonalité :</span>
-      <div class="pitch-controls-wrapper">
-        <button class="btn-step" onclick="stepPitch(-1)">-</button>
-        <select id="pitchSelect" onchange="changePitch(this.value)">
-          <option value="-12">-12 (-1 oct.)</option>
-          <option value="-11">-11</option>
-          <option value="-10">-10</option>
-          <option value="-9">-9</option>
-          <option value="-8">-8</option>
-          <option value="-7">-7</option>
-          <option value="-6">-6</option>
-          <option value="-5">-5</option>
-          <option value="-4">-4</option>
-          <option value="-3">-3</option>
-          <option value="-2">-2</option>
-          <option value="-1">-1</option>
-          <option value="0" selected>Original (0)</option>
-          <option value="1">+1</option>
-          <option value="2">+2</option>
-          <option value="3">+3</option>
-          <option value="4">+4</option>
-          <option value="5">+5</option>
-          <option value="6">+6</option>
-          <option value="7">+7</option>
-          <option value="8">+8</option>
-          <option value="9">+9</option>
-          <option value="10">+10</option>
-          <option value="11">+11</option>
-          <option value="12">+12 (+1 oct.)</option>
-        </select>
-        <button class="btn-step" onclick="stepPitch(1)">+</button>
+      <!-- 1. Bloc Sélection du morceau -->
+      <div class="control-group-vertical col-project">
+        <div class="control-group-horizontal">
+          <select id="projectSelect" onchange="switchProject(this.value)">
+            <option value="">-- Choisir un morceau --</option>
+          </select>
+        </div>
+        <div class="reset-sub-row mobile-hide" style="visibility: hidden;">
+          <button class="btn-reset">placeholder</button>
+        </div>
       </div>
-      <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
-    </div>
-    <div class="reset-sub-row">
-      <div class="spacer-left" style="width: 68px;"></div>
-      <div class="pitch-reset-container">
-        <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
-        <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+    
+      <!-- 2. Bloc Tonalité -->
+      <div class="control-group-vertical col-pitch">
+        <div class="control-group-horizontal">
+          <span class="label-no-break">Tonalité :</span>
+          <div class="pitch-controls-wrapper">
+            <button class="btn-step" onclick="stepPitch(-1)">-</button>
+            <select id="pitchSelect" onchange="changePitch(this.value)">
+              <option value="-12">-12 (-1 oct.)</option>
+              <option value="-11">-11</option>
+              <option value="-10">-10</option>
+              <option value="-9">-9</option>
+              <option value="-8">-8</option>
+              <option value="-7">-7</option>
+              <option value="-6">-6</option>
+              <option value="-5">-5</option>
+              <option value="-4">-4</option>
+              <option value="-3">-3</option>
+              <option value="-2">-2</option>
+              <option value="-1">-1</option>
+              <option value="0" selected>Original (0)</option>
+              <option value="1">+1</option>
+              <option value="2">+2</option>
+              <option value="3">+3</option>
+              <option value="4">+4</option>
+              <option value="5">+5</option>
+              <option value="6">+6</option>
+              <option value="7">+7</option>
+              <option value="8">+8</option>
+              <option value="9">+9</option>
+              <option value="10">+10</option>
+              <option value="11">+11</option>
+              <option value="12">+12 (+1 oct.)</option>
+            </select>
+            <button class="btn-step" onclick="stepPitch(1)">+</button>
+          </div>
+          <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
+        </div>
+        <div class="reset-sub-row">
+          <div class="spacer-left" style="width: 68px;"></div>
+          <div class="pitch-reset-container">
+            <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
+            <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+          </div>
+          <div class="spacer-right" style="width: 50px;"></div>
+        </div>
       </div>
-      <div class="spacer-right" style="width: 50px;"></div>
-    </div>
-  </div>
 
   <!-- 3. Bloc Tempo -->
   <div class="control-group-vertical col-tempo">
@@ -586,13 +599,17 @@
 </div>
 
       <!-- Zone de notes -->
-      <div id="notes-container" class="notes-box">
-        <strong>💡 Notes : </strong><span id="notes-text"></span>
+      <div id="notesContainer" class="notes-box">
+        <div style="font-weight: bold; margin-bottom: 4px; color: var(--primary);">💡 Notes :</div>
+        <!-- Si visiteur : simple div -->
+        <div id="notesDisplayContent"></div>
+        <!-- Si admin (modifiable) : textarea sans double cadre superflu -->
+        <textarea id="notesInput" style="display: none;" onchange="saveNotes(this.value)"></textarea>
       </div>
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v80)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v81)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
