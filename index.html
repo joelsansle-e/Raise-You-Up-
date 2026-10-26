@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v83)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v84)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -481,7 +481,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v83</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v84</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -512,7 +512,7 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v83</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v84</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
@@ -603,7 +603,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v83)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v84)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -739,7 +739,7 @@
       await loadMembers();
       loadPlaylist();
     }
-
+/*
     function logoutToSession() {
       if (isAdminMode && hasUnsavedChanges) {
         const confirmLogout = confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment vous déconnecter sans enregistrer ?");
@@ -762,7 +762,51 @@
       document.getElementById("appContent").style.display = "none";
       document.getElementById("sysContainer").style.display = "flex";
     }
+*/
+    function logoutToSession() {
+      if (isAdminMode && hasUnsavedChanges) {
+        const confirmLogout = confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment vous déconnecter sans enregistrer ?");
+        if (!confirmLogout) return;
+      }
 
+      stopAllSources();
+      isPlaying = false;
+      pauseOffset = 0;
+      duration = 0;
+      tracks = [];
+      currentProjectOriginalKey = "";
+      currentProjectInfo = {};
+      hasUnsavedChanges = false;
+      isAdminMode = false;
+      githubToken = "";
+
+      // Nettoyage complet de l'interface et réinitialisation des sélecteurs
+      document.getElementById("appConfigInput").value = "";
+      document.getElementById("sysAlert").style.display = "none";
+      
+      // Réinitialisation du menu déroulant des projets
+      const projectSelect = document.getElementById("projectSelect");
+      if (projectSelect) projectSelect.innerHTML = '<option value="">-- Choisir un morceau --</option>';
+
+      // Masquage de la zone de notes et suppression propre du bouton admin s'il existe
+      const notesContainer = document.getElementById("notesContainer");
+      if (notesContainer) notesContainer.style.display = "none";
+      
+      const saveBtn = document.getElementById('saveAdminBtn');
+      if (saveBtn) saveBtn.remove();
+
+      // Vidage de la liste des pistes audio affichées
+      const tracksList = document.getElementById("tracksList");
+      if (tracksList) tracksList.innerHTML = "";
+
+      // Suppression de la barre supérieure admin si présente pour éviter les doublons à la prochaine connexion
+      const topBar = document.getElementById("adminTopBar");
+      if (topBar) topBar.remove();
+
+      document.getElementById("appContent").style.display = "none";
+      document.getElementById("sysContainer").style.display = "flex";
+    }
+  
     document.getElementById("appConfigInput").addEventListener("keypress", (e) => {
       if (e.key === "Enter") initSession();
     });
