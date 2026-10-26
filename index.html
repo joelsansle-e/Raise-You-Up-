@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v79)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v80)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -136,7 +136,6 @@
     
     h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
-    /* En-tête global */
     .header-controls-row { 
       width: 100%; 
       display: flex; 
@@ -152,7 +151,6 @@
       gap: 6px;
     }
 
-    /* Tailles de colonnes stables sur PC */
     .col-project { width: 220px; }
     .col-pitch { width: 340px; }
     .col-tempo { width: 240px; }
@@ -199,6 +197,7 @@
       width: 90px;
     }
     
+    /* TOUS LES DROPDOWN MENUS CENTRES */
     select { 
       background: #131b2e; 
       color: #ffffff; 
@@ -211,6 +210,8 @@
       white-space: nowrap; 
       text-transform: capitalize;
       max-width: 100%;
+      text-align: center;       /* Centre le texte pour la plupart des navigateurs */
+      text-align-last: center;  /* Centre le texte sélectionné affiché (Firefox, Chrome) */
     }
     
     #projectSelect {
@@ -222,7 +223,12 @@
       min-width: 140px;
     }
 
-    select option { background-color: #131b2e; color: #ffffff; text-transform: capitalize; }
+    select option { 
+      background-color: #131b2e; 
+      color: #ffffff; 
+      text-transform: capitalize; 
+      text-align: center; /* Centre aussi les choix dans la liste déroulante */
+    }
     
     .btn-step { 
       background: rgba(255,255,255,0.1); 
@@ -325,7 +331,6 @@
       }
     }
 
-    /* REGLES SPECIFIQUES RESPONSIVE MOBILE */
     @media (max-width: 767px) {
       .header-controls-row {
         flex-wrap: wrap;
@@ -346,11 +351,9 @@
         justify-content: center;
         height: auto;
       }
-      /* Supprime l'espaceur vide sous le projet en mode mobile */
       .reset-sub-row.mobile-hide {
         display: none !important;
       }
-      /* Annule les marges/espaces latéraux sur mobile pour un centrage parfait */
       .spacer-left, .spacer-right {
         display: none !important;
       }
@@ -468,7 +471,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v79</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v80</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -499,7 +502,7 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v79</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v80</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
@@ -588,7 +591,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v79)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v80)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
