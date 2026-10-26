@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v84)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v85)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -481,7 +481,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v84</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v85</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -513,7 +513,7 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v84</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v85</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
@@ -604,7 +604,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v84)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v85)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -795,10 +795,34 @@
       if (!bgVideo) return;
     
       if (!bgVideo.paused) {
-        const confirmStop = confirm("Êtes-vous vraiment sûr(e) de vouloir stopper un être aussi mignon ? 🥺");
-        if (confirmStop) {
-          bgVideo.pause();
-          if (btn) btn.innerText = "▶️ Relancer la vidéo";
+        // Création d'une modale personnalisée si elle n'existe pas déjà
+        let customModal = document.getElementById("customConfirmModal");
+        if (!customModal) {
+          customModal = document.createElement("div");
+          customModal.id = "customConfirmModal";
+          customModal.style.cssText = "position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 10000; font-family: 'Inter', sans-serif;";
+          
+          customModal.innerHTML = `
+            <div style="background: #2a2a2a; border: 1px solid rgba(255,255,255,0.2); padding: 24px; border-radius: 12px; max-width: 380px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); color: #fff;">
+              <p style="margin: 0 0 20px 0; font-size: 15px; font-weight: 500; line-height: 1.4;">Êtes-vous vraiment sûr(e) de vouloir stopper un être aussi mignon ? 🐧​</p>
+              <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="modalYesBtn" style="background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;">Oui, tant pis 😭</button>
+                <button id="modalNoBtn" style="background: rgba(80, 80, 80, 0.85); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;">Non, je le garde 🥰</button>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(customModal);
+    
+          // Gestion des clics sur les boutons de la modale
+          document.getElementById("modalYesBtn").onclick = () => {
+            bgVideo.pause();
+            if (btn) btn.innerText = "▶️ Relancer la vidéo";
+            customModal.remove();
+          };
+    
+          document.getElementById("modalNoBtn").onclick = () => {
+            customModal.remove();
+          };
         }
       } else {
         bgVideo.play();
