@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v76)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v77)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -115,11 +115,10 @@
     .sys-card button.btn-exec:hover { opacity: 0.9; }
     #sysAlert { color: var(--accent); font-size: 0.85rem; display: none; }
 
-    /* REDUCTION DE LA LARGEUR MAXIMALE POUR EVITER L'EFFET GIGANTESQUE DISPROPORTIONNÉ */
     #appContent {
       display: none;
       width: 100%;
-      max-width: 780px; /* Taille optimale et beaucoup plus compacte */
+      max-width: 780px;
       flex-direction: column;
       gap: 12px;
       margin: 0 auto;
@@ -137,24 +136,22 @@
     
     h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
-    /* En-tête : les contrôles sont REGROUPÉS au CENTRE avec un petit espace naturel */
+    /* En-tête : regroupé au centre, sans retour à la ligne forcé sur PC */
     .header-controls-row { 
       width: 100%; 
       display: flex; 
-      justify-content: center; /* Groupe au centre */
+      justify-content: center; 
       align-items: flex-start; 
-      flex-wrap: wrap; 
-      gap: 24px; /* Espace équilibré entre les 3 blocs */
+      flex-wrap: nowrap; 
+      gap: 20px; 
     }
     
-    /* Chaque bloc (Morceau, Tonalité, Tempo) en colonne */
     .control-group-vertical {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    /* Ligne du haut des contrôles */
     .control-group-horizontal {
       display: flex;
       align-items: center;
@@ -163,12 +160,11 @@
       color: var(--text-dim);
     }
 
-    /* Alignement des boutons RESET juste sous leurs sélecteurs */
     .reset-sub-row {
       display: flex;
       gap: 6px;
       justify-content: flex-start;
-      padding-left: 58px; /* Décale pour aligner sous le sélecteur, en sautant le texte 'Tonalité :' */
+      padding-left: 58px;
     }
     
     select { 
@@ -216,7 +212,6 @@
     }
     .btn-reset:hover { background: var(--primary); color: #fff; }
 
-    /* Correction de la boîte de notes (un seul cadre sombre avec barre d'accent à gauche) */
     .notes-box {
       background: #1a1214;
       border-left: 4px solid var(--primary);
@@ -288,11 +283,10 @@
       }
     }
 
-    /* Adaptations pour petits écrans */
     @media (max-width: 767px) {
       .header-controls-row {
-        flex-direction: column;
-        align-items: center;
+        flex-wrap: wrap;
+        justify-content: center;
         gap: 16px;
       }
       .control-group-vertical {
@@ -310,7 +304,6 @@
       }
     }
 
-    /* Bouton d'accès au guide */
     .btn-help-trigger {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -330,7 +323,6 @@
       color: #fff;
     }
 
-    /* Fond assombri avec flou (modal overlay) */
     .help-modal-overlay {
       position: fixed;
       top: 0; 
@@ -347,7 +339,6 @@
       box-sizing: border-box;
     }
 
-    /* Carte de la modale ajustée aux écrans mobiles */
     .help-modal-card {
       background: var(--card);
       border: 1px solid rgba(255, 255, 255, 0.12);
@@ -364,7 +355,6 @@
       box-sizing: border-box;
     }
 
-    /* Titre de la modale */
     .help-modal-card h3 {
       font-size: 1.15rem;
       font-weight: 700;
@@ -377,7 +367,6 @@
       gap: 8px;
     }
 
-    /* Bouton de fermeture (Croix) */
     .help-modal-close {
       position: absolute;
       top: 16px; 
@@ -402,7 +391,6 @@
       border-color: var(--primary);
     }
 
-    /* Contenu du texte */
     .help-modal-content {
       display: flex;
       flex-direction: column;
@@ -425,7 +413,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v76</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v77</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -456,7 +444,7 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v76</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v77</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
@@ -536,7 +524,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v76)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v77)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
