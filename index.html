@@ -1596,6 +1596,15 @@
     };
     window.addEventListener("touchstart", startVideoOnTouch, { once: true });
     window.addEventListener("click", startVideoOnTouch, { once: true });
+
+      document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        const modal = document.querySelector('.help-modal-overlay');
+        if (modal && modal.style.display === 'flex') {
+          modal.style.display = 'none';
+        }
+      }
+    });
 </script>
 </body>
 </html>
