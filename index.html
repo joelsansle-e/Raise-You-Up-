@@ -136,7 +136,7 @@
     
     h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
-    /* En-tête global disposé en ligne sur écran large et en colonne harmonieuse sur mobile */
+    /* En-tête global disposé en ligne sur écran large */
     .header-controls-row { 
       width: 100%; 
       display: flex; 
@@ -146,7 +146,7 @@
       gap: 15px; 
     }
     
-    /* Chaque grand bloc (Tonalité ou Tempo) en colonne verticale pour garder le bouton reset sous son contrôle */
+    /* Chaque grand bloc (Tonalité ou Tempo) en colonne verticale */
     .control-group-vertical {
       display: flex;
       flex-direction: column;
@@ -290,6 +290,7 @@
     @media (max-width: 767px) {
       .header-controls-row {
         justify-content: center;
+        gap: 20px;
       }
       .control-group-vertical {
         align-items: center;
@@ -437,90 +438,87 @@
   <div id="appContent">
     <header>
       <!-- Bulle / Modale d'explications -->
-    <div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
-      <div class="help-modal-card">
-        <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
-        <h3>📖 Guide d'utilisation</h3>
-        <div class="help-modal-content">
-          <p><strong>1. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio et les réglages associés.</p>
-          <p><strong>2. Tonalité & Pitch :</strong> Ajustez le pitch par demi-tons selon vos besoins. Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour vous caler sur la tonalité attitrée du Lead.</p>
-          <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau <em>(sur ordinateur, la touche <strong>Espace</strong> peut être utilisée pour Play/Pause)</em>.<br>Le bouton de retour arrière vous replace instantanément au début.</p>
-          <p><strong>4. Gestion des pistes :</strong> Ajustez le volume de chaque piste indépendamment. Utilisez les boutons <strong>FOCUS</strong> pour mettre une piste en avant, <strong>S</strong> (Solo) pour l'isoler complètement, ou <strong>M</strong> (Mute) pour la couper.</p>
-          <p><strong>5. Notes de travail :</strong> Consultez les indications de répétition et les notes associées directement dans la zone dédiée.</p>
+      <div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
+        <div class="help-modal-card">
+          <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
+          <h3>📖 Guide d'utilisation</h3>
+          <div class="help-modal-content">
+            <p><strong>1. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio et les réglages associés.</p>
+            <p><strong>2. Tonalité & Pitch :</strong> Ajustez le pitch par demi-tons selon vos besoins. Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour vous caler sur la tonalité attitrée du Lead.</p>
+            <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau <em>(sur ordinateur, la touche <strong>Espace</strong> peut être utilisée pour Play/Pause)</em>.<br>Le bouton de retour arrière vous rappelle instantanément au début.</p>
+            <p><strong>4. Gestion des pistes :</strong> Ajustez le volume de chaque piste indépendamment. Utilisez les boutons <strong>FOCUS</strong> pour mettre une piste en avant, <strong>S</strong> (Solo) pour l'isoler complètement, ou <strong>M</strong> (Mute) pour la couper.</p>
+            <p><strong>5. Notes de travail :</strong> Consultez les indications de répétition et les notes associées directement dans la zone dédiée.</p>
+          </div>
         </div>
       </div>
-    </div>
+
       <div class="header-title-row">
         <h1>🎤 Raise You Up! <span class="version-badge">v75</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
 
-      <div class="header-title-row">
-  <h1>🎤 Raise You Up! <span class="version-badge">v75</span></h1>
-</div>
+      <!-- Contrôles principaux de l'en-tête -->
+      <div class="header-controls-row">
+        <!-- 1. Sélection du morceau -->
+        <select id="projectSelect" onchange="switchProject(this.value)">
+          <option value="">-- Choisir un morceau --</option>
+        </select>
 
-<button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
+        <!-- 2. Bloc Tonalité -->
+        <div class="control-group-vertical">
+          <div class="control-group-horizontal">
+            <span>Tonalité :</span>
+            <button class="btn-step" onclick="stepPitch(-1)">-</button>
+            <select id="pitchSelect" onchange="changePitch(this.value)">
+              <option value="-12">-12 (-1 oct.)</option>
+              <option value="-11">-11</option>
+              <option value="-10">-10</option>
+              <option value="-9">-9</option>
+              <option value="-8">-8</option>
+              <option value="-7">-7</option>
+              <option value="-6">-6</option>
+              <option value="-5">-5</option>
+              <option value="-4">-4</option>
+              <option value="-3">-3</option>
+              <option value="-2">-2</option>
+              <option value="-1">-1</option>
+              <option value="0" selected>Original (0)</option>
+              <option value="1">+1</option>
+              <option value="2">+2</option>
+              <option value="3">+3</option>
+              <option value="4">+4</option>
+              <option value="5">+5</option>
+              <option value="6">+6</option>
+              <option value="7">+7</option>
+              <option value="8">+8</option>
+              <option value="9">+9</option>
+              <option value="10">+10</option>
+              <option value="11">+11</option>
+              <option value="12">+12 (+1 oct.)</option>
+            </select>
+            <button class="btn-step" onclick="stepPitch(1)">+</button>
+            <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
+          </div>
+          <div class="reset-sub-row">
+            <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
+            <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+          </div>
+        </div>
 
-<div class="header-controls-row">
-  <!-- 1. Sélection du morceau -->
-  <select id="projectSelect" onchange="switchProject(this.value)">
-    <option value="">-- Choisir un morceau --</option>
-  </select>
+        <!-- 3. Bloc Tempo -->
+        <div class="control-group-vertical">
+          <div class="control-group-horizontal">
+            <span>Tempo :</span>
+            <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
+            <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
+          </div>
+          <div class="reset-sub-row">
+            <button class="btn-reset" onclick="resetTempo()">RESET</button>
+          </div>
+        </div>
+      </div>
 
-  <!-- 2. Bloc Tonalité -->
-  <div class="control-group-vertical">
-    <div class="control-group-horizontal">
-      <span>Tonalité :</span>
-      <button class="btn-step" onclick="stepPitch(-1)">-</button>
-      <select id="pitchSelect" onchange="changePitch(this.value)">
-        <option value="-12">-12 (-1 oct.)</option>
-        <option value="-11">-11</option>
-        <option value="-10">-10</option>
-        <option value="-9">-9</option>
-        <option value="-8">-8</option>
-        <option value="-7">-7</option>
-        <option value="-6">-6</option>
-        <option value="-5">-5</option>
-        <option value="-4">-4</option>
-        <option value="-3">-3</option>
-        <option value="-2">-2</option>
-        <option value="-1">-1</option>
-        <option value="0" selected>Original (0)</option>
-        <option value="1">+1</option>
-        <option value="2">+2</option>
-        <option value="3">+3</option>
-        <option value="4">+4</option>
-        <option value="5">+5</option>
-        <option value="6">+6</option>
-        <option value="7">+7</option>
-        <option value="8">+8</option>
-        <option value="9">+9</option>
-        <option value="10">+10</option>
-        <option value="11">+11</option>
-        <option value="12">+12 (+1 oct.)</option>
-      </select>
-      <button class="btn-step" onclick="stepPitch(1)">+</button>
-      <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
-    </div>
-    <div class="reset-sub-row">
-      <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
-      <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
-    </div>
-  </div>
-
-  <!-- 3. Bloc Tempo -->
-  <div class="control-group-vertical">
-    <div class="control-group-horizontal">
-      <span>Tempo :</span>
-      <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
-      <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
-    </div>
-    <div class="reset-sub-row">
-      <button class="btn-reset" onclick="resetTempo()">RESET</button>
-    </div>
-  </div>
-</div>
       <!-- Zone de notes -->
       <div id="notes-container" class="notes-box">
         <strong>💡 Notes : </strong><span id="notes-text"></span>
