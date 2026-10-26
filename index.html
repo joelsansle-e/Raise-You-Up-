@@ -213,25 +213,31 @@
       .track-controls { flex: 2 1 400px; width: auto; flex-wrap: nowrap; }
     }
 
-    /* Lien "Comment utiliser l'application ?" */
-    .help-trigger {
-      margin-top: 15px;
-      color: var(--text-dim);
-      font-size: 0.85rem;
-      cursor: pointer;
-      text-decoration: underline;
-      transition: color 0.2s ease;
-      text-align: center;
-    }
-    .help-trigger:hover {
+   /* Bouton d'accès au guide (à placer où tu souhaites dans ton header ou interface) */
+    .btn-help-trigger {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-help-trigger:hover {
+      background: var(--primary);
+      color: #fff;
     }
 
     /* Modale / Bulle d'aide */
     .help-modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(11, 15, 25, 0.8);
       backdrop-filter: blur(4px);
       display: none;
       justify-content: center;
@@ -245,29 +251,30 @@
       border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 12px;
       padding: 25px;
-      max-width: 480px;
+      max-width: 500px;
       width: 100%;
       position: relative;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
       color: var(--text);
     }
 
     .help-modal-card h3 {
-      font-size: 1.2rem;
+      font-size: 1.25rem;
       font-weight: 800;
       margin-bottom: 15px;
       color: var(--text);
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      padding-bottom: 8px;
+      padding-bottom: 10px;
+      letter-spacing: 0.5px;
     }
 
     .help-modal-close {
       position: absolute;
       top: 15px; right: 15px;
-      background: rgba(255, 255, 255, 0.1);
-      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       color: var(--text-dim);
-      width: 28px; height: 28px;
+      width: 30px; height: 30px;
       border-radius: 50%;
       cursor: pointer;
       font-weight: bold;
@@ -279,14 +286,15 @@
     .help-modal-close:hover {
       background: var(--primary);
       color: #fff;
+      border-color: var(--primary);
     }
 
     .help-modal-content {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      font-size: 0.88rem;
-      line-height: 1.45;
+      font-size: 0.9rem;
+      line-height: 1.5;
       color: var(--text-dim);
     }
 
@@ -313,24 +321,21 @@
       <button class="btn-exec" onclick="initSession()">Valider</button>
       <div id="sysAlert">Mot de passe incorrect</div>
     </div>
-    <div class="help-trigger" onclick="toggleHelpModal(true)">
-  💡 Comment utiliser l'application ?
-</div>
 
-<!-- Bulle / Modale d'explications -->
-<div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
-  <div class="help-modal-card">
-    <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
-    <h3>📖 Guide d'utilisation</h3>
-    <div class="help-modal-content">
-      <p><strong>1. Connexion :</strong> Entrez le code d'accès standard pour le mode <em>Visiteur</em> ou votre Token GitHub (PAT) pour le mode <em>Administrateur</em>.</p>
-      <p><strong>2. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio, la tonalité d'origine et les rôles.</p>
-      <p><strong>3. Tonalité & Pitch :</strong> Ajustez le pitch (+/- demi-tons). Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour caler le morceau sur la tonalité attitrée du Lead.</p>
-      <p><strong>4. Lecteur & Pistes :</strong> Gérez les volumes individuels des pistes (Instru, Lead, Soprano, Tenor), utilisez le bouton <strong>FOCUS</strong> pour isoler une voie, ou les boutons <strong>S</strong> (Solo) et <strong>M</strong> (Mute).</p>
-      <p><strong>5. Mode Admin :</strong> En mode Administrateur, vous pouvez également réassigner les rôles et éditer les notes de travail, puis sauvegarder directement sur GitHub.</p>
+  <!-- Bulle / Modale d'explications -->
+    <div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
+      <div class="help-modal-card">
+        <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
+        <h3>📖 Guide d'utilisation</h3>
+        <div class="help-modal-content">
+          <p><strong>1. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio et les réglages associés.</p>
+          <p><strong>2. Tonalité & Pitch :</strong> Ajustez le pitch par demi-tons selon vos besoins. Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour vous caler sur la tonalité attitrée du Lead.</p>
+          <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau. Le bouton de retour arrière vous replace instantanément au début.</p>
+          <p><strong>4. Gestion des pistes :</strong> Ajustez le volume de chaque piste indépendamment. Utilisez les boutons <strong>FOCUS</strong> pour isoler une voix, ou les modes <strong>S</strong> (Solo) et <strong>M</strong> (Mute).</p>
+          <p><strong>5. Notes de travail :</strong> Consultez les indications de répétition et les notes associées directement dans la zone dédiée.</p>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
   </div>
 
   <div id="appContent">
@@ -338,6 +343,8 @@
       <div class="header-title-row">
         <h1>🎤 Raise You Up! <span class="version-badge">v70</span></h1>
       </div>
+
+      <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
 
       <div class="header-controls-row">
         <select id="projectSelect" onchange="switchProject(this.value)">
