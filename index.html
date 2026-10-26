@@ -232,6 +232,24 @@
       <button class="btn-exec" onclick="initSession()">Valider</button>
       <div id="sysAlert">Mot de passe incorrect</div>
     </div>
+    <div class="help-trigger" onclick="toggleHelpModal(true)">
+  💡 Comment utiliser l'application ?
+</div>
+
+<!-- Bulle / Modale d'explications -->
+<div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
+  <div class="help-modal-card">
+    <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
+    <h3>📖 Guide d'utilisation</h3>
+    <div class="help-modal-content">
+      <p><strong>1. Connexion :</strong> Entrez le code d'accès standard pour le mode <em>Visiteur</em> ou votre Token GitHub (PAT) pour le mode <em>Administrateur</em>.</p>
+      <p><strong>2. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio, la tonalité d'origine et les rôles.</p>
+      <p><strong>3. Tonalité & Pitch :</strong> Ajustez le pitch (+/- demi-tons). Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour caler le morceau sur la tonalité attitrée du Lead.</p>
+      <p><strong>4. Lecteur & Pistes :</strong> Gérez les volumes individuels des pistes (Instru, Lead, Soprano, Tenor), utilisez le bouton <strong>FOCUS</strong> pour isoler une voie, ou les boutons <strong>S</strong> (Solo) et <strong>M</strong> (Mute).</p>
+      <p><strong>5. Mode Admin :</strong> En mode Administrateur, vous pouvez également réassigner les rôles et éditer les notes de travail, puis sauvegarder directement sur GitHub.</p>
+    </div>
+  </div>
+</div>
   </div>
 
   <div id="appContent">
