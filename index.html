@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v82)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v83)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -481,7 +481,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v82</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v83</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -512,7 +512,7 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v82</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v83</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
@@ -603,7 +603,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v82)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v83)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -1091,7 +1091,7 @@
       updatePitchSelectOptions();
       hasUnsavedChanges = false;
 
-      // Gestion de l'affichage des notes (Visiteur vs Admin)
+     // Gestion de l'affichage des notes (Visiteur vs Admin avec double cadre)
       const notesContainer = document.getElementById("notesContainer");
       const displayContent = document.getElementById("notesDisplayContent");
       const notesInput = document.getElementById("notesInput");
@@ -1105,7 +1105,20 @@
           if (displayContent) displayContent.style.display = "none";
           if (notesInput) {
             notesInput.style.display = "block";
+            notesInput.style.width = "100%";
+            notesInput.style.minHeight = "60px";
+            notesInput.style.resize = "vertical";
+            // Restauration du style "double encadré" spécifique à l'admin
+            notesInput.style.background = "rgba(255,255,255,0.08)";
+            notesInput.style.border = "1px solid rgba(255,255,255,0.2)";
+            notesInput.style.borderRadius = "6px";
+            notesInput.style.padding = "8px";
+            notesInput.style.color = "inherit";
+            notesInput.style.outline = "none";
+            notesInput.style.fontFamily = "inherit";
+            notesInput.style.fontSize = "14px";
             notesInput.value = currentProjectInfo.Notes || '';
+            notesInput.oninput = () => { hasUnsavedChanges = true; };
           }
           
           if (!saveBtn) {
@@ -1121,11 +1134,13 @@
             saveBtn.style.display = 'block';
           }
         } else {
+          // Mode Visiteur : pas de double cadre, simple affichage propre
           if (notesInput) notesInput.style.display = "none";
           if (displayContent) {
             displayContent.style.display = "block";
             displayContent.textContent = currentProjectInfo.Notes || '';
           }
+          // Le bouton d'enregistrement est masqué pour le visiteur
           if (saveBtn) saveBtn.style.display = 'none';
         }
       } else {
