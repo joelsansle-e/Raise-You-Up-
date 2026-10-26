@@ -393,6 +393,20 @@
       color: var(--primary);
       font-weight: 600;
     }
+
+    /* Organisation en colonne pour mettre les boutons de reset en dessous */
+    .control-column {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    
+    .control-line {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: flex-start;
+    }
 </style>
 </head>
 <body>
@@ -438,59 +452,67 @@
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
 
       <div class="header-controls-row">
-  <select id="projectSelect" onchange="switchProject(this.value)">
-    <option value="">-- Choisir un morceau --</option>
-  </select>
-
-  <div class="control-group">
-    <span>Tonalité :</span>
-    <div class="pitch-container">
-      <div class="pitch-main-line">
-        <button class="btn-step" onclick="stepPitch(-1)">-</button>
-        <select id="pitchSelect" onchange="changePitch(this.value)">
-          <option value="-12">-12 (-1 oct.)</option>
-          <option value="-11">-11</option>
-          <option value="-10">-10</option>
-          <option value="-9">-9</option>
-          <option value="-8">-8</option>
-          <option value="-7">-7</option>
-          <option value="-6">-6</option>
-          <option value="-5">-5</option>
-          <option value="-4">-4</option>
-          <option value="-3">-3</option>
-          <option value="-2">-2</option>
-          <option value="-1">-1</option>
-          <option value="0" selected>Original (0)</option>
-          <option value="1">+1</option>
-          <option value="2">+2</option>
-          <option value="3">+3</option>
-          <option value="4">+4</option>
-          <option value="5">+5</option>
-          <option value="6">+6</option>
-          <option value="7">+7</option>
-          <option value="8">+8</option>
-          <option value="9">+9</option>
-          <option value="10">+10</option>
-          <option value="11">+11</option>
-          <option value="12">+12 (+1 oct.)</option>
+        <select id="projectSelect" onchange="switchProject(this.value)">
+          <option value="">-- Choisir un morceau --</option>
         </select>
-        <button class="btn-step" onclick="stepPitch(1)">+</button>
-        <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap; margin-left: 4px;"></span>
+      
+        <!-- Bloc Tonalité -->
+        <div class="control-group">
+          <span>Tonalité :</span>
+          <div class="control-column">
+            <div class="control-line">
+              <button class="btn-step" onclick="stepPitch(-1)">-</button>
+              <select id="pitchSelect" onchange="changePitch(this.value)">
+                <option value="-12">-12 (-1 oct.)</option>
+                <option value="-11">-11</option>
+                <option value="-10">-10</option>
+                <option value="-9">-9</option>
+                <option value="-8">-8</option>
+                <option value="-7">-7</option>
+                <option value="-6">-6</option>
+                <option value="-5">-5</option>
+                <option value="-4">-4</option>
+                <option value="-3">-3</option>
+                <option value="-2">-2</option>
+                <option value="-1">-1</option>
+                <option value="0" selected>Original (0)</option>
+                <option value="1">+1</option>
+                <option value="2">+2</option>
+                <option value="3">+3</option>
+                <option value="4">+4</option>
+                <option value="5">+5</option>
+                <option value="6">+6</option>
+                <option value="7">+7</option>
+                <option value="8">+8</option>
+                <option value="9">+9</option>
+                <option value="10">+10</option>
+                <option value="11">+11</option>
+                <option value="12">+12 (+1 oct.)</option>
+              </select>
+              <button class="btn-step" onclick="stepPitch(1)">+</button>
+              <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap; margin-left: 4px;"></span>
+            </div>
+            <div class="control-line">
+              <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
+              <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+            </div>
+          </div>
       </div>
-      <div class="pitch-reset-line">
-        <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
-        <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+
+      <!-- Bloc Tempo -->
+      <div class="control-group">
+        <span>Tempo :</span>
+        <div class="control-column">
+          <div class="control-line">
+            <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
+            <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
+          </div>
+          <div class="control-line">
+            <button class="btn-reset" onclick="resetTempo()">RESET</button>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div class="control-group">
-    <span>Tempo :</span>
-    <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
-    <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
-    <button class="btn-reset" onclick="resetTempo()">RESET</button>
-  </div>
-</div>
       <!-- Zone de notes -->
       <div id="notes-container" class="notes-box">
         <strong>💡 Notes : </strong><span id="notes-text"></span>
