@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v70)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v71)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -136,14 +136,19 @@
     
     h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
-    /* Forcé sur une seule ligne avec défilement horizontal fluide si besoin */
     .header-controls-row { 
       width: 100%; 
       display: flex; 
       justify-content: center; 
       align-items: center; 
-      flex-wrap: nowrap; 
+      flex-wrap: wrap; /* Passe à la ligne proprement sur mobile */
       gap: 6px; 
+    }
+
+    @media (min-width: 768px) {
+      .header-controls-row {
+        flex-wrap: nowrap; /* Reste sur une seule ligne sur ordinateur */
+      }
     }
     
     select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; cursor: pointer; white-space: nowrap; text-transform: capitalize; }
@@ -251,16 +256,19 @@
 
     /* Carte de la modale */
     .help-modal-card {
-      background: var(--card); /* Même fond de carte que le reste de l'app */
+      background: var(--card);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
       padding: 24px;
       max-width: 480px;
       width: 100%;
+      max-height: 85vh; /* Hauteur max de 85% de l'écran */
+      overflow-y: auto;  /* Scroll interne si le texte est trop long */
       position: relative;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
       color: var(--text);
       font-family: 'Inter', sans-serif;
+      box-sizing: border-box;
     }
 
     /* Titre de la modale */
@@ -324,7 +332,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v70</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v71</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -347,14 +355,14 @@
         <div class="help-modal-content">
           <p><strong>1. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio et les réglages associés.</p>
           <p><strong>2. Tonalité & Pitch :</strong> Ajustez le pitch par demi-tons selon vos besoins. Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour vous caler sur la tonalité attitrée du Lead.</p>
-          <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau <em>(sur ordinateur, la touche <strong>Espace</strong> peut être utilisée pour Play/Pause)</em>. Le bouton de retour arrière vous replace instantanément au début.</p>
+          <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau <em>(sur ordinateur, la touche <strong>Espace</strong> peut être utilisée pour Play/Pause)</em>.<br>Le bouton de retour arrière vous replace instantanément au début.</p>
           <p><strong>4. Gestion des pistes :</strong> Ajustez le volume de chaque piste indépendamment. Utilisez les boutons <strong>FOCUS</strong> pour mettre une piste en avant, <strong>S</strong> (Solo) pour l'isoler complètement, ou <strong>M</strong> (Mute) pour la couper.</p>
           <p><strong>5. Notes de travail :</strong> Consultez les indications de répétition et les notes associées directement dans la zone dédiée.</p>
         </div>
       </div>
     </div>
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v70</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v71</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
@@ -414,7 +422,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v70)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v71)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
