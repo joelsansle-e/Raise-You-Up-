@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v72)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v73)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -136,40 +136,38 @@
     
     h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
-    /* En-tête structuré en 2 lignes nettes */
+    /* En-tête global */
     .header-controls-row { 
       width: 100%; 
       display: flex; 
-      flex-direction: column; 
-      gap: 10px; 
+      justify-content: space-between; 
+      align-items: flex-start; 
+      flex-wrap: wrap; 
+      gap: 15px; 
     }
     
-    .header-main-line {
+    /* Chaque grand bloc (Tonalité ou Tempo) en colonne verticale */
+    .control-group-vertical {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      width: 100%;
+      flex-direction: column;
+      gap: 6px;
     }
 
-    .header-reset-line {
+    /* La ligne horizontale contenant les contrôles principaux */
+    .control-group-horizontal {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      width: 100%;
-      padding: 0 5px;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
     }
 
-    .reset-group-tona {
+    /* La ligne des boutons de reset positionnée juste en dessous */
+    .reset-sub-row {
       display: flex;
       gap: 6px;
-      margin-left: calc(180px + 45px); /* Aligne grosso modo sous la zone tonalité de la ligne du haut */
-    }
-
-    .reset-group-tempo {
-      display: flex;
-      margin-right: 40px; /* Aligne sous la zone tempo */
+      justify-content: flex-start;
+      padding-left: 58px; /* Aligne les boutons proprement sous les sélecteurs en décalant la largeur du label "Tonalité :" */
     }
     
     select { 
@@ -187,14 +185,6 @@
     }
     select option { background-color: #131b2e; color: #ffffff; text-transform: capitalize; }
     
-    .control-group { 
-      display: flex; 
-      align-items: center; 
-      gap: 6px; 
-      font-size: 0.85rem; 
-      color: var(--text-dim); 
-    }
-
     .btn-step { 
       background: rgba(255,255,255,0.1); 
       border: 1px solid rgba(255,255,255,0.2); 
@@ -412,7 +402,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v72</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v73</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -442,19 +432,19 @@
       </div>
     </div>
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v72</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v73</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
 
       <div class="header-controls-row">
-  <!-- Ligne 1 : Contrôles principaux -->
-  <div class="header-main-line">
-    <select id="projectSelect" onchange="switchProject(this.value)">
-      <option value="">-- Choisir un morceau --</option>
-    </select>
+  <select id="projectSelect" onchange="switchProject(this.value)">
+    <option value="">-- Choisir un morceau --</option>
+  </select>
 
-    <div class="control-group">
+  <!-- Groupe Tonalité (Contrôles + Resets en dessous dans le même bloc) -->
+  <div class="control-group-vertical">
+    <div class="control-group-horizontal">
       <span>Tonalité :</span>
       <button class="btn-step" onclick="stepPitch(-1)">-</button>
       <select id="pitchSelect" onchange="changePitch(this.value)">
@@ -487,21 +477,20 @@
       <button class="btn-step" onclick="stepPitch(1)">+</button>
       <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
     </div>
+    <div class="reset-sub-row">
+      <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
+      <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+    </div>
+  </div>
 
-    <div class="control-group">
+  <!-- Groupe Tempo (Contrôle + Reset en dessous dans le même bloc) -->
+  <div class="control-group-vertical">
+    <div class="control-group-horizontal">
       <span>Tempo :</span>
       <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
       <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
     </div>
-  </div>
-
-  <!-- Ligne 2 : Les boutons Reset alignés en dessous -->
-  <div class="header-reset-line">
-    <div class="reset-group-tona">
-      <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
-      <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
-    </div>
-    <div class="reset-group-tempo">
+    <div class="reset-sub-row">
       <button class="btn-reset" onclick="resetTempo()">RESET</button>
     </div>
   </div>
@@ -513,7 +502,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v72)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v73)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
