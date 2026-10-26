@@ -7,7 +7,504 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
- <div class="header-controls-row">
+  <style>
+    :root { 
+      --bg: #0b0f19; 
+      --card: #131b2e; 
+      --primary: rgba(146, 94, 98, 1); 
+      --text: #f0f4f8; 
+      --text-dim: #8a99ad; 
+      --accent: #ff4757; 
+    }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+    }
+    
+    body { 
+      background-color: var(--bg); 
+      color: var(--text); 
+      padding: 10px; 
+      min-height: 100vh; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    #bg-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+      object-position: center;
+      z-index: -1;
+      pointer-events: none;
+      user-select: none;
+    }
+    
+    #sysContainer {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .sys-card {
+      background: var(--card);
+      padding: 30px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .input-wrapper {
+      position: relative;
+      width: 100%;
+      display: flex;
+      align-items: center;
+    }
+    .sys-card input {
+      background: #0b0f19;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+      padding: 12px 45px 12px 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      outline: none;
+      width: 100%;
+      text-align: center;
+    }
+    .toggle-view {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+    }
+    .toggle-view:hover { color: var(--primary); }
+
+    .sys-card button.btn-exec {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .sys-card button.btn-exec:hover { opacity: 0.9; }
+    #sysAlert { color: var(--accent); font-size: 0.85rem; display: none; }
+
+    #appContent {
+      display: none;
+      width: 100%;
+      max-width: 920px;
+      flex-direction: column;
+      gap: 12px;
+      margin: 0 auto;
+    }
+
+    header, .player-card, .track-row { 
+      background: var(--card); 
+      border-radius: 12px; 
+      padding: 15px; 
+      width: 100%; 
+    }
+    
+    header { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+    .header-title-row { width: 100%; display: flex; justify-content: center; align-items: center; }
+    
+    h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
+
+    /* En-tête global */
+    .header-controls-row { 
+      width: 100%; 
+      display: flex; 
+      justify-content: center; 
+      align-items: flex-start; 
+      flex-wrap: nowrap; 
+      gap: 15px; 
+    }
+    
+    .control-group-vertical {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    /* Tailles de colonnes stables sur PC */
+    .col-project { width: 220px; }
+    .col-pitch { width: 340px; }
+    .col-tempo { width: 240px; }
+
+    .control-group-horizontal {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      height: 36px;
+      width: 100%;
+    }
+
+    .label-no-break {
+      white-space: nowrap;
+    }
+
+    .pitch-controls-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pitch-reset-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .reset-sub-row {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      height: 30px;
+      align-items: center;
+      width: 100%;
+    }
+
+    .tempo-reset-wrapper {
+      display: flex;
+      justify-content: center;
+      width: 90px;
+    }
+    
+    select { 
+      background: #131b2e; 
+      color: #ffffff; 
+      border: 1px solid rgba(255,255,255,0.2); 
+      padding: 8px 10px; 
+      border-radius: 8px; 
+      font-size: 0.85rem; 
+      outline: none; 
+      cursor: pointer; 
+      white-space: nowrap; 
+      text-transform: capitalize;
+      max-width: 100%;
+    }
+    
+    #projectSelect {
+      width: 100%;
+    }
+
+    #pitchSelect {
+      width: 140px;
+      min-width: 140px;
+    }
+
+    select option { background-color: #131b2e; color: #ffffff; text-transform: capitalize; }
+    
+    .btn-step { 
+      background: rgba(255,255,255,0.1); 
+      border: 1px solid rgba(255,255,255,0.2); 
+      color: var(--text); 
+      width: 28px; 
+      height: 28px; 
+      border-radius: 6px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      flex-shrink: 0; 
+    }
+    .btn-step:hover { background: rgba(255,255,255,0.2); }
+    
+    .btn-reset { 
+      background: rgba(255,255,255,0.08); 
+      border: 1px solid rgba(255,255,255,0.15); 
+      color: var(--primary); 
+      padding: 6px 8px; 
+      border-radius: 6px; 
+      font-size: 0.7rem; 
+      font-weight: bold; 
+      cursor: pointer; 
+      white-space: nowrap; 
+      flex-shrink: 1; 
+    }
+    .btn-reset:hover { background: var(--primary); color: #fff; }
+
+    .notes-box {
+      background: #1a1214;
+      border-left: 4px solid var(--primary);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      display: none;
+      width: 100%;
+      color: var(--text);
+      border-top: none;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .player-card { display: flex; flex-direction: column; gap: 15px; }
+    .controls-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; width: 100%; }
+    .play-btn, .rewind-btn { width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); color: var(--text); border: 1px solid rgba(255,255,255,0.2); font-size: 1.1rem; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+    .play-btn { background: var(--primary); color: #fff; border: none; font-size: 1.3rem; }
+    .play-btn:disabled, .rewind-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .rewind-btn:hover:not(:disabled) { background: rgba(255,255,255,0.2); }
+    
+    .time-display { font-family: monospace; color: var(--primary); min-width: 100px; text-align: center; font-size: 0.9rem; }
+    .timeline { flex: 1; min-width: 140px; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; position: relative; cursor: pointer; touch-action: none; }
+    .timeline-progress { height: 100%; background: var(--primary); border-radius: 4px; width: 0%; pointer-events: none; }
+    .timeline-thumb {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      left: 0%;
+      pointer-events: none;
+    }
+    .tracks-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+    
+    .track-row { display: flex; flex-direction: column; gap: 12px; padding: 12px 15px; }
+    .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; display: flex; align-items: center; gap: 8px; text-transform: capitalize; }
+    .track-controls { width: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
+    
+    input[type=range] { -webkit-appearance: none; flex: 1; min-width: 80px; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); cursor: pointer; }
+    
+    .vol-label { font-family: monospace; font-size: 0.85rem; color: var(--primary); min-width: 38px; text-align: right; }
+
+    .btn-group { display: flex; gap: 6px; }
+    .btn-track { padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: var(--text-dim); font-size: 0.75rem; font-weight: bold; cursor: pointer; }
+    .btn-track.active-pre { background: var(--primary); color: #fff; }
+    .btn-track.active-solo { background: #eccc68; color: #000; }
+    .btn-track.active-mute { background: var(--accent); color: #fff; }
+    
+    .version-badge { font-size: 0.75rem; background: rgba(146, 94, 98, 0.2); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block; font-weight: normal; }
+
+    @media (min-width: 768px) {
+      body { padding: 20px; }
+      .track-row { flex-direction: row; align-items: center; justify-content: space-between; }
+      .track-name { flex: 1 1 180px; width: auto; }
+      .track-controls { flex: 2 1 360px; width: auto; flex-wrap: nowrap; }
+      
+      .btn-reset {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+      }
+      select {
+        font-size: 0.95rem;
+        padding: 8px 12px;
+      }
+    }
+
+    /* REGLES SPECIFIQUES RESPONSIVE MOBILE */
+    @media (max-width: 767px) {
+      .header-controls-row {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 16px;
+      }
+      .control-group-vertical {
+        align-items: center;
+        width: 100% !important;
+      }
+      .control-group-horizontal {
+        justify-content: center;
+        width: 100%;
+        flex-wrap: wrap;
+        height: auto;
+      }
+      .reset-sub-row {
+        justify-content: center;
+        height: auto;
+      }
+      /* Supprime l'espaceur vide sous le projet en mode mobile */
+      .reset-sub-row.mobile-hide {
+        display: none !important;
+      }
+      /* Annule les marges/espaces latéraux sur mobile pour un centrage parfait */
+      .spacer-left, .spacer-right {
+        display: none !important;
+      }
+      .tempo-reset-wrapper {
+        width: auto !important;
+      }
+    }
+
+    .btn-help-trigger {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--primary);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-help-trigger:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .help-modal-overlay {
+      position: fixed;
+      top: 0; 
+      left: 0; 
+      width: 100vw; 
+      height: 100vh;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(6px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+
+    .help-modal-card {
+      background: var(--card);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 480px;
+      width: 100%;
+      max-height: 85vh; 
+      overflow-y: auto; 
+      position: relative;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      box-sizing: border-box;
+    }
+
+    .help-modal-card h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--primary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .help-modal-close {
+      position: absolute;
+      top: 16px; 
+      right: 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-dim);
+      width: 28px; 
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    
+    .help-modal-close:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .help-modal-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      color: var(--text-dim);
+    }
+
+    .help-modal-content strong {
+      color: var(--primary);
+      font-weight: 600;
+    }
+</style>
+</head>
+<body>
+  <video autoplay muted loop playsinline webkit-playsinline id="bg-video" poster="bg-pingu.jpg">
+    <source src="bg-pingu.mp4" type="video/mp4">
+  </video>
+  
+  <div id="sysContainer">    
+    <div class="sys-card">
+      <h2>🎤 Raise You Up! <span class="version-badge">v79</span></h2>
+      <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
+      <div class="input-wrapper">
+        <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
+        <button type="button" class="toggle-view" onclick="toggleViewMode()" title="Afficher/Masquer">
+          <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+        </button>
+      </div>
+      <button class="btn-exec" onclick="initSession()">Valider</button>
+      <div id="sysAlert">Mot de passe incorrect</div>
+    </div>
+  </div>
+
+  <div id="appContent">
+    <header>
+      <!-- Bulle / Modale d'explications -->
+      <div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
+        <div class="help-modal-card">
+          <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
+          <h3>📖 Guide d'utilisation</h3>
+          <div class="help-modal-content">
+            <p><strong>1. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio et les réglages associés.</p>
+            <p><strong>2. Tonalité & Pitch :</strong> Ajustez le pitch par demi-tons selon vos besoins. Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour vous caler sur la tonalité attitrée du Lead.</p>
+            <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau <em>(sur ordinateur, la touche <strong>Espace</strong> peut être utilisée pour Play/Pause)</em>.<br>Le bouton de retour arrière vous rappelle instantanément au début.</p>
+            <p><strong>4. Gestion des pistes :</strong> Ajustez le volume de chaque piste indépendamment. Utilisez les boutons <strong>FOCUS</strong> pour mettre une piste en avant, <strong>S</strong> (Solo) pour l'isoler complètement, ou <strong>M</strong> (Mute) pour la couper.</p>
+            <p><strong>5. Notes de travail :</strong> Consultez les indications de répétition et les notes associées directement dans la zone dédiée.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="header-title-row">
+        <h1>🎤 Raise You Up! <span class="version-badge">v79</span></h1>
+      </div>
+
+      <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
+
+      <div class="header-controls-row">
   <!-- 1. Bloc Sélection du morceau -->
   <div class="control-group-vertical col-project">
     <div class="control-group-horizontal">
@@ -80,126 +577,6 @@
         <button class="btn-reset" onclick="resetTempo()">RESET</button>
       </div>
       <div class="spacer-right" style="width: 40px;"></div>
-    </div>
-  </div>
-</div>
-</head>
-<body>
-  <video autoplay muted loop playsinline webkit-playsinline id="bg-video" poster="bg-pingu.jpg">
-    <source src="bg-pingu.mp4" type="video/mp4">
-  </video>
-  
-  <div id="sysContainer">    
-    <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v79</span></h2>
-      <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
-      <div class="input-wrapper">
-        <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
-        <button type="button" class="toggle-view" onclick="toggleViewMode()" title="Afficher/Masquer">
-          <svg id="eyeIcon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-        </button>
-      </div>
-      <button class="btn-exec" onclick="initSession()">Valider</button>
-      <div id="sysAlert">Mot de passe incorrect</div>
-    </div>
-  </div>
-
-  <div id="appContent">
-    <header>
-      <!-- Bulle / Modale d'explications -->
-      <div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
-        <div class="help-modal-card">
-          <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
-          <h3>📖 Guide d'utilisation</h3>
-          <div class="help-modal-content">
-            <p><strong>1. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio et les réglages associés.</p>
-            <p><strong>2. Tonalité & Pitch :</strong> Ajustez le pitch par demi-tons selon vos besoins. Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour vous caler sur la tonalité attitrée du Lead.</p>
-            <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau <em>(sur ordinateur, la touche <strong>Espace</strong> peut être utilisée pour Play/Pause)</em>.<br>Le bouton de retour arrière vous rappelle instantanément au début.</p>
-            <p><strong>4. Gestion des pistes :</strong> Ajustez le volume de chaque piste indépendamment. Utilisez les boutons <strong>FOCUS</strong> pour mettre une piste en avant, <strong>S</strong> (Solo) pour l'isoler complètement, ou <strong>M</strong> (Mute) pour la couper.</p>
-            <p><strong>5. Notes de travail :</strong> Consultez les indications de répétition et les notes associées directement dans la zone dédiée.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v79</span></h1>
-      </div>
-
-      <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
-
-      <div class="header-controls-row">
-  <!-- 1. Bloc Sélection du morceau -->
-  <div class="control-group-vertical col-project">
-    <div class="control-group-horizontal">
-      <select id="projectSelect" onchange="switchProject(this.value)">
-        <option value="">-- Choisir un morceau --</option>
-      </select>
-    </div>
-    <div class="reset-sub-row" style="visibility: hidden;">
-      <button class="btn-reset">placeholder</button>
-    </div>
-  </div>
-
-  <!-- 2. Bloc Tonalité -->
-  <div class="control-group-vertical col-pitch">
-    <div class="control-group-horizontal">
-      <span class="label-no-break">Tonalité :</span>
-      <div class="pitch-controls-wrapper">
-        <button class="btn-step" onclick="stepPitch(-1)">-</button>
-        <select id="pitchSelect" onchange="changePitch(this.value)">
-          <option value="-12">-12 (-1 oct.)</option>
-          <option value="-11">-11</option>
-          <option value="-10">-10</option>
-          <option value="-9">-9</option>
-          <option value="-8">-8</option>
-          <option value="-7">-7</option>
-          <option value="-6">-6</option>
-          <option value="-5">-5</option>
-          <option value="-4">-4</option>
-          <option value="-3">-3</option>
-          <option value="-2">-2</option>
-          <option value="-1">-1</option>
-          <option value="0" selected>Original (0)</option>
-          <option value="1">+1</option>
-          <option value="2">+2</option>
-          <option value="3">+3</option>
-          <option value="4">+4</option>
-          <option value="5">+5</option>
-          <option value="6">+6</option>
-          <option value="7">+7</option>
-          <option value="8">+8</option>
-          <option value="9">+9</option>
-          <option value="10">+10</option>
-          <option value="11">+11</option>
-          <option value="12">+12 (+1 oct.)</option>
-        </select>
-        <button class="btn-step" onclick="stepPitch(1)">+</button>
-      </div>
-      <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
-    </div>
-    <div class="reset-sub-row">
-      <div style="width: 68px;"></div> <!-- Espace réservé pour le label "Tonalité :" -->
-      <div class="pitch-reset-container">
-        <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
-        <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
-      </div>
-      <div style="width: 50px;"></div> <!-- Équilibre la clé entre parenthèses -->
-    </div>
-  </div>
-
-  <!-- 3. Bloc Tempo -->
-  <div class="control-group-vertical col-tempo">
-    <div class="control-group-horizontal">
-      <span class="label-no-break">Tempo :</span>
-      <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
-      <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
-    </div>
-    <div class="reset-sub-row">
-      <div style="width: 58px;"></div> <!-- Espace équivalent au label "Tempo :" -->
-      <div class="tempo-reset-wrapper">
-        <button class="btn-reset" onclick="resetTempo()">RESET</button>
-      </div>
-      <div style="width: 40px;"></div> <!-- Équilibre le label 100% -->
     </div>
   </div>
 </div>
