@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v77)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v78)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -115,11 +115,10 @@
     .sys-card button.btn-exec:hover { opacity: 0.9; }
     #sysAlert { color: var(--accent); font-size: 0.85rem; display: none; }
 
-    /* LARGEUR OPTIMISEE ET ELARGIE LEGEREMENT POUR TOUT CASSER PROPREMENT */
     #appContent {
       display: none;
       width: 100%;
-      max-width: 840px;
+      max-width: 900px;
       flex-direction: column;
       gap: 12px;
       margin: 0 auto;
@@ -137,14 +136,14 @@
     
     h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
-    /* En-tête : parfaitement ajusté pour tenir sur une seule ligne sur PC */
+    /* En-tête global en 3 colonnes rigoureusement alignées */
     .header-controls-row { 
       width: 100%; 
       display: flex; 
       justify-content: center; 
       align-items: flex-start; 
       flex-wrap: nowrap; 
-      gap: 20px; 
+      gap: 15px; 
     }
     
     .control-group-vertical {
@@ -153,19 +152,27 @@
       gap: 6px;
     }
 
+    /* Largeurs fixes pour figer l'alignement horizontal de chaque bloc */
+    .col-project { width: 220px; }
+    .col-pitch { width: 320px; }
+    .col-tempo { width: 240px; }
+
     .control-group-horizontal {
       display: flex;
       align-items: center;
       gap: 6px;
       font-size: 0.85rem;
       color: var(--text-dim);
+      height: 36px;
+      width: 100%;
     }
 
     .reset-sub-row {
       display: flex;
       gap: 6px;
       justify-content: flex-start;
-      padding-left: 58px;
+      height: 30px; /* Hauteur fixe pour aligner parfaitement les lignes de reset sur le même plan horizontal */
+      align-items: center;
     }
     
     select { 
@@ -181,6 +188,16 @@
       text-transform: capitalize;
       max-width: 100%;
     }
+    
+    #projectSelect {
+      width: 100%;
+    }
+
+    #pitchSelect {
+      width: 140px;
+      min-width: 140px;
+    }
+
     select option { background-color: #131b2e; color: #ffffff; text-transform: capitalize; }
     
     .btn-step { 
@@ -255,7 +272,7 @@
     .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; display: flex; align-items: center; gap: 8px; text-transform: capitalize; }
     .track-controls { width: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
     
-    input[type=range] { -webkit-appearance: none; flex: 1; min-width: 90px; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
+    input[type=range] { -webkit-appearance: none; flex: 1; min-width: 80px; background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; outline: none; }
     input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--primary); cursor: pointer; }
     
     .vol-label { font-family: monospace; font-size: 0.85rem; color: var(--primary); min-width: 38px; text-align: right; }
@@ -292,16 +309,17 @@
       }
       .control-group-vertical {
         align-items: center;
-        width: 100%;
+        width: 100% !important;
       }
       .control-group-horizontal {
         justify-content: center;
         width: 100%;
         flex-wrap: wrap;
+        height: auto;
       }
       .reset-sub-row {
         justify-content: center;
-        padding-left: 0;
+        height: auto;
       }
     }
 
@@ -414,7 +432,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v77</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v78</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -445,27 +463,26 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v77</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v78</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
 
       <div class="header-controls-row">
   <!-- 1. Bloc Sélection du morceau -->
-  <div class="control-group-vertical">
+  <div class="control-group-vertical col-project">
     <div class="control-group-horizontal">
       <select id="projectSelect" onchange="switchProject(this.value)">
         <option value="">-- Choisir un morceau --</option>
       </select>
     </div>
-    <!-- Espace masqué pour garder l'alignement vertical rigoureux avec les autres colonnes -->
-    <div class="reset-sub-row" style="visibility: hidden; height: 0; overflow: hidden;">
+    <div class="reset-sub-row" style="visibility: hidden;">
       <button class="btn-reset">placeholder</button>
     </div>
   </div>
 
   <!-- 2. Bloc Tonalité -->
-  <div class="control-group-vertical">
+  <div class="control-group-vertical col-pitch">
     <div class="control-group-horizontal">
       <span>Tonalité :</span>
       <button class="btn-step" onclick="stepPitch(-1)">-</button>
@@ -506,10 +523,10 @@
   </div>
 
   <!-- 3. Bloc Tempo -->
-  <div class="control-group-vertical">
+  <div class="control-group-vertical col-tempo">
     <div class="control-group-horizontal">
       <span>Tempo :</span>
-      <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
+      <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)">
       <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
     </div>
     <div class="reset-sub-row">
@@ -525,7 +542,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v77)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v78)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
