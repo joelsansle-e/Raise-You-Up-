@@ -308,22 +308,7 @@
     <source src="bg-pingu.mp4" type="video/mp4">
   </video>
   
-  <div id="sysContainer">
-     <!-- Bulle / Modale d'explications -->
-    <div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
-      <div class="help-modal-card">
-        <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
-        <h3>📖 Guide d'utilisation</h3>
-        <div class="help-modal-content">
-          <p><strong>1. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio et les réglages associés.</p>
-          <p><strong>2. Tonalité & Pitch :</strong> Ajustez le pitch par demi-tons selon vos besoins. Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour vous caler sur la tonalité attitrée du Lead.</p>
-          <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau. Le bouton de retour arrière vous replace instantanément au début.</p>
-          <p><strong>4. Gestion des pistes :</strong> Ajustez le volume de chaque piste indépendamment. Utilisez les boutons <strong>FOCUS</strong> pour isoler une voix, ou les modes <strong>S</strong> (Solo) et <strong>M</strong> (Mute).</p>
-          <p><strong>5. Notes de travail :</strong> Consultez les indications de répétition et les notes associées directement dans la zone dédiée.</p>
-        </div>
-      </div>
-    </div>
-    
+  <div id="sysContainer">    
     <div class="sys-card">
       <h2>🎤 Raise You Up! <span class="version-badge">v70</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
@@ -340,6 +325,20 @@
 
   <div id="appContent">
     <header>
+      <!-- Bulle / Modale d'explications -->
+    <div id="helpModal" class="help-modal-overlay" onclick="if(event.target === this) toggleHelpModal(false)">
+      <div class="help-modal-card">
+        <button class="help-modal-close" onclick="toggleHelpModal(false)">✕</button>
+        <h3>📖 Guide d'utilisation</h3>
+        <div class="help-modal-content">
+          <p><strong>1. Sélection du morceau :</strong> Choisissez un titre dans le menu déroulant principal pour charger les pistes audio et les réglages associés.</p>
+          <p><strong>2. Tonalité & Pitch :</strong> Ajustez le pitch par demi-tons selon vos besoins. Utilisez <strong>RESET OG</strong> pour revenir à la tonalité d'origine ou <strong>RESET LEAD</strong> pour vous caler sur la tonalité attitrée du Lead.</p>
+          <p><strong>3. Lecteur audio :</strong> Utilisez le bouton de lecture central et la barre de progression pour naviguer dans le morceau. Le bouton de retour arrière vous replace instantanément au début.</p>
+          <p><strong>4. Gestion des pistes :</strong> Ajustez le volume de chaque piste indépendamment. Utilisez les boutons <strong>FOCUS</strong> pour isoler une voix, ou les modes <strong>S</strong> (Solo) et <strong>M</strong> (Mute).</p>
+          <p><strong>5. Notes de travail :</strong> Consultez les indications de répétition et les notes associées directement dans la zone dédiée.</p>
+        </div>
+      </div>
+    </div>
       <div class="header-title-row">
         <h1>🎤 Raise You Up! <span class="version-badge">v70</span></h1>
       </div>
