@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v75)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v76)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -115,12 +115,13 @@
     .sys-card button.btn-exec:hover { opacity: 0.9; }
     #sysAlert { color: var(--accent); font-size: 0.85rem; display: none; }
 
+    /* REDUCTION DE LA LARGEUR MAXIMALE POUR EVITER L'EFFET GIGANTESQUE DISPROPORTIONNÉ */
     #appContent {
       display: none;
       width: 100%;
-      max-width: 1050px;
+      max-width: 780px; /* Taille optimale et beaucoup plus compacte */
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
       margin: 0 auto;
     }
 
@@ -136,24 +137,24 @@
     
     h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
-    /* En-tête global disposé en ligne sur écran large */
+    /* En-tête : les contrôles sont REGROUPÉS au CENTRE avec un petit espace naturel */
     .header-controls-row { 
       width: 100%; 
       display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
+      justify-content: center; /* Groupe au centre */
+      align-items: flex-start; 
       flex-wrap: wrap; 
-      gap: 15px; 
+      gap: 24px; /* Espace équilibré entre les 3 blocs */
     }
     
-    /* Chaque grand bloc (Tonalité ou Tempo) en colonne verticale */
+    /* Chaque bloc (Morceau, Tonalité, Tempo) en colonne */
     .control-group-vertical {
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    /* La ligne horizontale contenant les contrôles principaux */
+    /* Ligne du haut des contrôles */
     .control-group-horizontal {
       display: flex;
       align-items: center;
@@ -162,12 +163,12 @@
       color: var(--text-dim);
     }
 
-    /* La ligne des boutons de reset positionnée précisément en dessous */
+    /* Alignement des boutons RESET juste sous leurs sélecteurs */
     .reset-sub-row {
       display: flex;
       gap: 6px;
       justify-content: flex-start;
-      padding-left: 58px; /* Aligne les boutons proprement sous les sélecteurs en décalant la largeur du label */
+      padding-left: 58px; /* Décale pour aligner sous le sélecteur, en sautant le texte 'Tonalité :' */
     }
     
     select { 
@@ -215,7 +216,7 @@
     }
     .btn-reset:hover { background: var(--primary); color: #fff; }
 
-    /* Boîte de notes sans double cadre */
+    /* Correction de la boîte de notes (un seul cadre sombre avec barre d'accent à gauche) */
     .notes-box {
       background: #1a1214;
       border-left: 4px solid var(--primary);
@@ -254,7 +255,7 @@
     }
     .tracks-list { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     
-    .track-row { display: flex; flex-direction: column; gap: 12px; padding: 15px; }
+    .track-row { display: flex; flex-direction: column; gap: 12px; padding: 12px 15px; }
     .track-name { width: 100%; font-weight: 600; font-size: 0.95rem; word-break: break-word; display: flex; align-items: center; gap: 8px; text-transform: capitalize; }
     .track-controls { width: 100%; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: space-between; }
     
@@ -274,8 +275,8 @@
     @media (min-width: 768px) {
       body { padding: 20px; }
       .track-row { flex-direction: row; align-items: center; justify-content: space-between; }
-      .track-name { flex: 1 1 200px; width: auto; }
-      .track-controls { flex: 2 1 400px; width: auto; flex-wrap: nowrap; }
+      .track-name { flex: 1 1 180px; width: auto; }
+      .track-controls { flex: 2 1 360px; width: auto; flex-wrap: nowrap; }
       
       .btn-reset {
         font-size: 0.75rem;
@@ -287,10 +288,12 @@
       }
     }
 
+    /* Adaptations pour petits écrans */
     @media (max-width: 767px) {
       .header-controls-row {
-        justify-content: center;
-        gap: 20px;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
       }
       .control-group-vertical {
         align-items: center;
@@ -422,7 +425,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v75</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v76</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -453,71 +456,78 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v75</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v76</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
 
-      <!-- Contrôles principaux de l'en-tête -->
       <div class="header-controls-row">
-        <!-- 1. Sélection du morceau -->
-        <select id="projectSelect" onchange="switchProject(this.value)">
-          <option value="">-- Choisir un morceau --</option>
-        </select>
+  <!-- 1. Bloc Sélection du morceau -->
+  <div class="control-group-vertical">
+    <div class="control-group-horizontal">
+      <select id="projectSelect" onchange="switchProject(this.value)">
+        <option value="">-- Choisir un morceau --</option>
+      </select>
+    </div>
+    <!-- Espace masqué pour garder l'alignement vertical rigoureux avec les autres colonnes -->
+    <div class="reset-sub-row" style="visibility: hidden; height: 0; overflow: hidden;">
+      <button class="btn-reset">placeholder</button>
+    </div>
+  </div>
 
-        <!-- 2. Bloc Tonalité -->
-        <div class="control-group-vertical">
-          <div class="control-group-horizontal">
-            <span>Tonalité :</span>
-            <button class="btn-step" onclick="stepPitch(-1)">-</button>
-            <select id="pitchSelect" onchange="changePitch(this.value)">
-              <option value="-12">-12 (-1 oct.)</option>
-              <option value="-11">-11</option>
-              <option value="-10">-10</option>
-              <option value="-9">-9</option>
-              <option value="-8">-8</option>
-              <option value="-7">-7</option>
-              <option value="-6">-6</option>
-              <option value="-5">-5</option>
-              <option value="-4">-4</option>
-              <option value="-3">-3</option>
-              <option value="-2">-2</option>
-              <option value="-1">-1</option>
-              <option value="0" selected>Original (0)</option>
-              <option value="1">+1</option>
-              <option value="2">+2</option>
-              <option value="3">+3</option>
-              <option value="4">+4</option>
-              <option value="5">+5</option>
-              <option value="6">+6</option>
-              <option value="7">+7</option>
-              <option value="8">+8</option>
-              <option value="9">+9</option>
-              <option value="10">+10</option>
-              <option value="11">+11</option>
-              <option value="12">+12 (+1 oct.)</option>
-            </select>
-            <button class="btn-step" onclick="stepPitch(1)">+</button>
-            <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
-          </div>
-          <div class="reset-sub-row">
-            <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
-            <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
-          </div>
-        </div>
+  <!-- 2. Bloc Tonalité -->
+  <div class="control-group-vertical">
+    <div class="control-group-horizontal">
+      <span>Tonalité :</span>
+      <button class="btn-step" onclick="stepPitch(-1)">-</button>
+      <select id="pitchSelect" onchange="changePitch(this.value)">
+        <option value="-12">-12 (-1 oct.)</option>
+        <option value="-11">-11</option>
+        <option value="-10">-10</option>
+        <option value="-9">-9</option>
+        <option value="-8">-8</option>
+        <option value="-7">-7</option>
+        <option value="-6">-6</option>
+        <option value="-5">-5</option>
+        <option value="-4">-4</option>
+        <option value="-3">-3</option>
+        <option value="-2">-2</option>
+        <option value="-1">-1</option>
+        <option value="0" selected>Original (0)</option>
+        <option value="1">+1</option>
+        <option value="2">+2</option>
+        <option value="3">+3</option>
+        <option value="4">+4</option>
+        <option value="5">+5</option>
+        <option value="6">+6</option>
+        <option value="7">+7</option>
+        <option value="8">+8</option>
+        <option value="9">+9</option>
+        <option value="10">+10</option>
+        <option value="11">+11</option>
+        <option value="12">+12 (+1 oct.)</option>
+      </select>
+      <button class="btn-step" onclick="stepPitch(1)">+</button>
+      <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
+    </div>
+    <div class="reset-sub-row">
+      <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
+      <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+    </div>
+  </div>
 
-        <!-- 3. Bloc Tempo -->
-        <div class="control-group-vertical">
-          <div class="control-group-horizontal">
-            <span>Tempo :</span>
-            <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
-            <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
-          </div>
-          <div class="reset-sub-row">
-            <button class="btn-reset" onclick="resetTempo()">RESET</button>
-          </div>
-        </div>
-      </div>
+  <!-- 3. Bloc Tempo -->
+  <div class="control-group-vertical">
+    <div class="control-group-horizontal">
+      <span>Tempo :</span>
+      <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
+      <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
+    </div>
+    <div class="reset-sub-row">
+      <button class="btn-reset" onclick="resetTempo()">RESET</button>
+    </div>
+  </div>
+</div>
 
       <!-- Zone de notes -->
       <div id="notes-container" class="notes-box">
@@ -526,7 +536,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v75)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v76)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
