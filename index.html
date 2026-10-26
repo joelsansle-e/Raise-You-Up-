@@ -735,6 +735,30 @@
         logoutBtn.onclick = logoutToSession;
         topBar.appendChild(logoutBtn);
       }
+
+      let stopBgBtn = document.getElementById("stopBgBtn");
+    if (!stopBgBtn) {
+      stopBgBtn = document.createElement("button");
+      stopBgBtn.id = "stopBgBtn";
+      stopBgBtn.innerText = "⏸️ Stopper la vidéo";
+      stopBgBtn.style.cssText = "font-family: 'Inter', sans-serif; background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px; transition: background 0.2s, box-shadow 0.2s; white-space: nowrap;";
+      stopBgBtn.onmouseover = () => {
+        stopBgBtn.style.background = "rgba(166, 114, 118, 0.95)";
+        stopBgBtn.style.boxShadow = "0 6px 16px rgba(0,0,0,0.5)";
+      };
+      stopBgBtn.onmouseout = () => {
+        stopBgBtn.style.background = "rgba(146, 94, 98, 0.85)";
+        stopBgBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.4)";
+      };
+      stopBgBtn.onclick = toggleBackgroundAnimation;
+      
+      // On l'ajoute dans la topBar juste avant le bouton de déconnexion (ou à la suite si logoutBtn n'est pas encore créé)
+      if (logoutBtn) {
+        topBar.insertBefore(stopBgBtn, logoutBtn);
+      } else {
+        topBar.appendChild(stopBgBtn);
+      }
+    }
       
       console.log(message);
       await loadMembers();
@@ -764,6 +788,24 @@
       document.getElementById("sysContainer").style.display = "flex";
     }
 */
+    function toggleBackgroundAnimation() {
+      const bgVideo = document.getElementById("bgVideo") || document.querySelector("video");
+      const btn = document.getElementById("stopBgBtn");
+    
+      if (!bgVideo) return;
+    
+      if (!bgVideo.paused) {
+        const confirmStop = confirm("Êtes-vous vraiment sûr(e) de vouloir stopper un être aussi mignon ? 🥺");
+        if (confirmStop) {
+          bgVideo.pause();
+          if (btn) btn.innerText = "▶️ Relancer la vidéo";
+        }
+      } else {
+        bgVideo.play();
+        if (btn) btn.innerText = "⏸️ Stopper la vidéo";
+      }
+    }
+  
     function logoutToSession() {
       if (isAdminMode && hasUnsavedChanges) {
         const confirmLogout = confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment vous déconnecter sans enregistrer ?");
