@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v81)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v82)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -197,7 +197,6 @@
       width: 90px;
     }
     
-    /* Élément sélectionné centré */
     select { 
       background: #131b2e; 
       color: #ffffff; 
@@ -223,7 +222,6 @@
       min-width: 140px;
     }
 
-    /* Options à l'intérieur du menu déroulant alignées à gauche */
     select option { 
       background-color: #131b2e; 
       color: #ffffff; 
@@ -261,7 +259,6 @@
     }
     .btn-reset:hover { background: var(--primary); color: #fff; }
 
-    /* Conteneur unique et propre pour les notes */
     .notes-box {
       background: #1a1214;
       border-left: 4px solid var(--primary);
@@ -276,7 +273,6 @@
       border-bottom: none;
     }
 
-    /* Si l'élément à l'intérieur est un textarea en mode lecture seule ou visiteur, on retire sa bordure et son fond */
     .notes-box textarea, .notes-box .notes-content {
       background: transparent;
       border: none;
@@ -476,7 +472,7 @@
       color: var(--primary);
       font-weight: 600;
     }
-</style>
+  </style>
 </head>
 <body>
   <video autoplay muted loop playsinline webkit-playsinline id="bg-video" poster="bg-pingu.jpg">
@@ -485,7 +481,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v81</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v82</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -516,100 +512,98 @@
       </div>
 
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v81</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v82</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
 
       <div class="header-controls-row">
-      <!-- 1. Bloc Sélection du morceau -->
-      <div class="control-group-vertical col-project">
-        <div class="control-group-horizontal">
-          <select id="projectSelect" onchange="switchProject(this.value)">
-            <option value="">-- Choisir un morceau --</option>
-          </select>
-        </div>
-        <div class="reset-sub-row mobile-hide" style="visibility: hidden;">
-          <button class="btn-reset">placeholder</button>
-        </div>
-      </div>
-    
-      <!-- 2. Bloc Tonalité -->
-      <div class="control-group-vertical col-pitch">
-        <div class="control-group-horizontal">
-          <span class="label-no-break">Tonalité :</span>
-          <div class="pitch-controls-wrapper">
-            <button class="btn-step" onclick="stepPitch(-1)">-</button>
-            <select id="pitchSelect" onchange="changePitch(this.value)">
-              <option value="-12">-12 (-1 oct.)</option>
-              <option value="-11">-11</option>
-              <option value="-10">-10</option>
-              <option value="-9">-9</option>
-              <option value="-8">-8</option>
-              <option value="-7">-7</option>
-              <option value="-6">-6</option>
-              <option value="-5">-5</option>
-              <option value="-4">-4</option>
-              <option value="-3">-3</option>
-              <option value="-2">-2</option>
-              <option value="-1">-1</option>
-              <option value="0" selected>Original (0)</option>
-              <option value="1">+1</option>
-              <option value="2">+2</option>
-              <option value="3">+3</option>
-              <option value="4">+4</option>
-              <option value="5">+5</option>
-              <option value="6">+6</option>
-              <option value="7">+7</option>
-              <option value="8">+8</option>
-              <option value="9">+9</option>
-              <option value="10">+10</option>
-              <option value="11">+11</option>
-              <option value="12">+12 (+1 oct.)</option>
+        <!-- 1. Bloc Sélection du morceau -->
+        <div class="control-group-vertical col-project">
+          <div class="control-group-horizontal">
+            <select id="projectSelect" onchange="switchProject(this.value)">
+              <option value="">-- Choisir un morceau --</option>
             </select>
-            <button class="btn-step" onclick="stepPitch(1)">+</button>
           </div>
-          <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
+          <div class="reset-sub-row mobile-hide" style="visibility: hidden;">
+            <button class="btn-reset">placeholder</button>
+          </div>
         </div>
-        <div class="reset-sub-row">
-          <div class="spacer-left" style="width: 68px;"></div>
-          <div class="pitch-reset-container">
-            <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
-            <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+      
+        <!-- 2. Bloc Tonalité -->
+        <div class="control-group-vertical col-pitch">
+          <div class="control-group-horizontal">
+            <span class="label-no-break">Tonalité :</span>
+            <div class="pitch-controls-wrapper">
+              <button class="btn-step" onclick="stepPitch(-1)">-</button>
+              <select id="pitchSelect" onchange="changePitch(this.value)">
+                <option value="-12">-12 (-1 oct.)</option>
+                <option value="-11">-11</option>
+                <option value="-10">-10</option>
+                <option value="-9">-9</option>
+                <option value="-8">-8</option>
+                <option value="-7">-7</option>
+                <option value="-6">-6</option>
+                <option value="-5">-5</option>
+                <option value="-4">-4</option>
+                <option value="-3">-3</option>
+                <option value="-2">-2</option>
+                <option value="-1">-1</option>
+                <option value="0" selected>Original (0)</option>
+                <option value="1">+1</option>
+                <option value="2">+2</option>
+                <option value="3">+3</option>
+                <option value="4">+4</option>
+                <option value="5">+5</option>
+                <option value="6">+6</option>
+                <option value="7">+7</option>
+                <option value="8">+8</option>
+                <option value="9">+9</option>
+                <option value="10">+10</option>
+                <option value="11">+11</option>
+                <option value="12">+12 (+1 oct.)</option>
+              </select>
+              <button class="btn-step" onclick="stepPitch(1)">+</button>
+            </div>
+            <span id="currentKeyDisplay" style="font-weight: bold; color: var(--primary); white-space: nowrap;"></span>
           </div>
-          <div class="spacer-right" style="width: 50px;"></div>
+          <div class="reset-sub-row">
+            <div class="spacer-left" style="width: 68px;"></div>
+            <div class="pitch-reset-container">
+              <button onclick="resetPitchToOriginal()" class="btn-reset">RESET OG</button>
+              <button onclick="resetPitchToLead()" class="btn-reset">RESET LEAD</button>
+            </div>
+            <div class="spacer-right" style="width: 50px;"></div>
+          </div>
+        </div>
+
+        <!-- 3. Bloc Tempo -->
+        <div class="control-group-vertical col-tempo">
+          <div class="control-group-horizontal">
+            <span class="label-no-break">Tempo :</span>
+            <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
+            <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
+          </div>
+          <div class="reset-sub-row">
+            <div class="spacer-left" style="width: 58px;"></div>
+            <div class="tempo-reset-wrapper">
+              <button class="btn-reset" onclick="resetTempo()">RESET</button>
+            </div>
+            <div class="spacer-right" style="width: 40px;"></div>
+          </div>
         </div>
       </div>
 
-  <!-- 3. Bloc Tempo -->
-  <div class="control-group-vertical col-tempo">
-    <div class="control-group-horizontal">
-      <span class="label-no-break">Tempo :</span>
-      <input type="range" id="tempoSlider" min="0.3" max="2.0" step="0.01" value="1.0" oninput="changeTempo(this.value)" style="width: 90px;">
-      <span id="tempoLabel" style="min-width: 40px; font-weight: bold; color: var(--primary);">100%</span>
-    </div>
-    <div class="reset-sub-row">
-      <div class="spacer-left" style="width: 58px;"></div>
-      <div class="tempo-reset-wrapper">
-        <button class="btn-reset" onclick="resetTempo()">RESET</button>
-      </div>
-      <div class="spacer-right" style="width: 40px;"></div>
-    </div>
-  </div>
-</div>
-
-      <!-- Zone de notes -->
+      <!-- Zone de notes unifiée -->
       <div id="notesContainer" class="notes-box">
         <div style="font-weight: bold; margin-bottom: 4px; color: var(--primary);">💡 Notes :</div>
-        <!-- Si visiteur : simple div -->
         <div id="notesDisplayContent"></div>
-        <!-- Si admin (modifiable) : textarea sans double cadre superflu -->
         <textarea id="notesInput" style="display: none;" onchange="saveNotes(this.value)"></textarea>
       </div>
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v81)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v82)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
@@ -630,7 +624,6 @@
     let currentProjectInfo = {};
     let currentProjectOriginalKey = "";
     
-    // Variables pour la gestion Admin & Token GitHub
     let githubToken = "";
     let isAdminMode = false;
     let hasUnsavedChanges = false;
@@ -700,7 +693,6 @@
       document.getElementById("sysContainer").style.display = "none";
       document.getElementById("appContent").style.display = "flex";
       
-      // Barre supérieure avec le badge admin et le bouton de déconnexion unifié
       const appContent = document.getElementById("appContent");
       let topBar = document.getElementById("adminTopBar");
       if (!topBar) {
@@ -961,12 +953,10 @@
       changePitch(newVal);
     }
 
-    // Remet le pitch à 0 (Tonalité d'origine du morceau)
     function resetPitchToOriginal() {
       changePitch(0);
     }
 
-    // Remet le pitch sur la tonalité spécifique du Lead sélectionné
     function resetPitchToLead() {
       const leadSelect = document.querySelector('.role-select[data-role="Lead"]');
       const currentLead = leadSelect ? leadSelect.value : (currentProjectInfo.Lead || globalMembers[0]);
@@ -1047,7 +1037,7 @@
         document.getElementById("timeDisplay").innerText = "00:00 / 00:00";
         document.getElementById("progress").style.width = "0%";
         document.getElementById("tracksList").innerHTML = "";
-        document.getElementById("notes-container").style.display = "none";
+        document.getElementById("notesContainer").style.display = "none";
         
         const existingBtn = document.getElementById('saveAdminBtn');
         if (existingBtn) existingBtn.remove();
@@ -1101,8 +1091,9 @@
       updatePitchSelectOptions();
       hasUnsavedChanges = false;
 
-      const notesContainer = document.getElementById("notes-container");
-      const notesText = document.getElementById("notes-text");
+      const notesContainer = document.getElementById("notesContainer");
+      const displayContent = document.getElementById("notesDisplayContent");
+      const notesInput = document.getElementById("notesInput");
       let saveBtn = document.getElementById('saveAdminBtn');
 
       const hasNotes = (currentProjectInfo.Notes && currentProjectInfo.Notes.trim().length > 0) || isAdminMode;
@@ -1110,7 +1101,11 @@
       if (hasNotes) {
         notesContainer.style.display = "block";
         if (isAdminMode) {
-          notesText.innerHTML = `<textarea id="notesInput" oninput="hasUnsavedChanges = true;" style="width: 100%; min-height: 60px; resize: vertical; background: rgba(255,255,255,0.08); color: inherit; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; font-family: inherit; font-size: 14px;">${currentProjectInfo.Notes || ''}</textarea>`;
+          if (notesInput) {
+            notesInput.style.display = "block";
+            notesInput.value = currentProjectInfo.Notes || '';
+          }
+          if (displayContent) displayContent.style.display = "none";
           
           if (!saveBtn) {
             saveBtn = document.createElement('button');
@@ -1125,7 +1120,11 @@
             saveBtn.style.display = 'block';
           }
         } else {
-          notesText.innerHTML = `<div style="width: 100%; min-height: 40px; background: rgba(255,255,255,0.05); color: inherit; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; padding: 8px; font-family: inherit; font-size: 14px; white-space: pre-wrap; word-break: break-word;">${currentProjectInfo.Notes || ''}</div>`;
+          if (notesInput) notesInput.style.display = "none";
+          if (displayContent) {
+            displayContent.style.display = "block";
+            displayContent.textContent = currentProjectInfo.Notes || '';
+          }
           if (saveBtn) saveBtn.style.display = 'none';
         }
       } else {
@@ -1614,7 +1613,7 @@
     window.addEventListener("touchstart", startVideoOnTouch, { once: true });
     window.addEventListener("click", startVideoOnTouch, { once: true });
 
-      document.addEventListener('keydown', function(event) {
+    document.addEventListener('keydown', function(event) {
       if (event.key === 'Escape') {
         const modal = document.querySelector('.help-modal-overlay');
         if (modal && modal.style.display === 'flex') {
