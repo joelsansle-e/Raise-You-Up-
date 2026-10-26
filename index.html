@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v71)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v72)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -136,28 +136,68 @@
     
     h1 { font-size: 1.5rem; font-weight: 800; text-align: center; letter-spacing: 0.5px; }
 
+    /* Correction des contrôles de l'en-tête pour mobile */
     .header-controls-row { 
       width: 100%; 
       display: flex; 
       justify-content: center; 
       align-items: center; 
-      flex-wrap: wrap; /* Passe à la ligne proprement sur mobile */
-      gap: 6px; 
-    }
-
-    @media (min-width: 768px) {
-      .header-controls-row {
-        flex-wrap: nowrap; /* Reste sur une seule ligne sur ordinateur */
-      }
+      flex-wrap: wrap; /* Passe proprement à la ligne sur mobile */
+      gap: 8px; 
     }
     
-    select { background: #131b2e; color: #ffffff; border: 1px solid rgba(255,255,255,0.2); padding: 8px 12px; border-radius: 8px; font-size: 0.95rem; outline: none; cursor: pointer; white-space: nowrap; text-transform: capitalize; }
+    select { 
+      background: #131b2e; 
+      color: #ffffff; 
+      border: 1px solid rgba(255,255,255,0.2); 
+      padding: 8px 10px; 
+      border-radius: 8px; 
+      font-size: 0.85rem; 
+      outline: none; 
+      cursor: pointer; 
+      white-space: nowrap; 
+      text-transform: capitalize;
+      max-width: 100%;
+    }
     select option { background-color: #131b2e; color: #ffffff; text-transform: capitalize; }
     
-    .control-group { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; color: var(--text-dim); white-space: nowrap; }
-    .btn-step { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: var(--text); width: 28px; height: 28px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+    .control-group { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      gap: 6px; 
+      font-size: 0.85rem; 
+      color: var(--text-dim); 
+      flex-wrap: wrap; /* Permet aux éléments internes de s'adapter si l'écran est petit */
+    }
+    .btn-step { 
+      background: rgba(255,255,255,0.1); 
+      border: 1px solid rgba(255,255,255,0.2); 
+      color: var(--text); 
+      width: 28px; 
+      height: 28px; 
+      border-radius: 6px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      flex-shrink: 0; 
+    }
     .btn-step:hover { background: rgba(255,255,255,0.2); }
-    .btn-reset { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: var(--primary); padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    
+    .btn-reset { 
+      background: rgba(255,255,255,0.08); 
+      border: 1px solid rgba(255,255,255,0.15); 
+      color: var(--primary); 
+      padding: 6px 8px; 
+      border-radius: 6px; 
+      font-size: 0.7rem; 
+      font-weight: bold; 
+      cursor: pointer; 
+      white-space: nowrap; 
+      flex-shrink: 1; /* S'adapte au lieu de pousser les bords */
+    }
     .btn-reset:hover { background: var(--primary); color: #fff; }
 
     .notes-box {
@@ -216,9 +256,22 @@
       .track-row { flex-direction: row; align-items: center; justify-content: space-between; }
       .track-name { flex: 1 1 200px; width: auto; }
       .track-controls { flex: 2 1 400px; width: auto; flex-wrap: nowrap; }
+      
+      /* Remet tout sur une ligne parfaite sur ordinateur */
+      .header-controls-row {
+        flex-wrap: nowrap;
+      }
+      .btn-reset {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+      }
+      select {
+        font-size: 0.95rem;
+        padding: 8px 12px;
+      }
     }
 
-   /* Bouton d'accès au guide (à placer où tu souhaites dans ton header ou interface) */
+    /* Bouton d'accès au guide */
     .btn-help-trigger {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.15);
@@ -243,27 +296,28 @@
       position: fixed;
       top: 0; 
       left: 0; 
-      width: 100%; 
-      height: 100%;
-      background: rgba(11, 15, 25, 0.85); /* Fond sombre profond */
+      width: 100vw; 
+      height: 100vh;
+      background: rgba(11, 15, 25, 0.85);
       backdrop-filter: blur(6px);
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 10000;
-      padding: 20px;
+      padding: 15px;
+      box-sizing: border-box;
     }
 
-    /* Carte de la modale */
+    /* Carte de la modale ajustée aux écrans mobiles */
     .help-modal-card {
       background: var(--card);
       border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
-      padding: 24px;
+      padding: 20px;
       max-width: 480px;
       width: 100%;
-      max-height: 85vh; /* Hauteur max de 85% de l'écran */
-      overflow-y: auto;  /* Scroll interne si le texte est trop long */
+      max-height: 85vh; 
+      overflow-y: auto; 
       position: relative;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
       color: var(--text);
@@ -276,7 +330,7 @@
       font-size: 1.15rem;
       font-weight: 700;
       margin-bottom: 16px;
-      color: var(--primary); /* Accent avec ta couleur DA */
+      color: var(--primary);
       border-bottom: 1px solid rgba(255, 255, 255, 0.1);
       padding-bottom: 10px;
       display: flex;
@@ -320,10 +374,10 @@
     }
 
     .help-modal-content strong {
-      color: var(--primary); /* Met en valeur les titres d'étapes avec la couleur DA */
+      color: var(--primary);
       font-weight: 600;
     }
-  </style>
+</style>
 </head>
 <body>
   <video autoplay muted loop playsinline webkit-playsinline id="bg-video" poster="bg-pingu.jpg">
@@ -332,7 +386,7 @@
   
   <div id="sysContainer">    
     <div class="sys-card">
-      <h2>🎤 Raise You Up! <span class="version-badge">v71</span></h2>
+      <h2>🎤 Raise You Up! <span class="version-badge">v72</span></h2>
       <p style="font-size: 0.9rem; color: var(--text-dim);">Accès restreint. Veuillez entrer le mot de passe :</p>
       <div class="input-wrapper">
         <input type="password" id="appConfigInput" placeholder="Mot de passe" autofocus>
@@ -362,7 +416,7 @@
       </div>
     </div>
       <div class="header-title-row">
-        <h1>🎤 Raise You Up! <span class="version-badge">v71</span></h1>
+        <h1>🎤 Raise You Up! <span class="version-badge">v72</span></h1>
       </div>
 
       <button onclick="toggleHelpModal(true)" class="btn-help-trigger">💡 Comment utiliser l'application ?</button>
@@ -422,7 +476,7 @@
     </header>
 
     <div class="player-card">
-      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v71)</div>
+      <div id="status" style="font-size:0.85rem; color:var(--text-dim);">Chargement de la liste... (v72)</div>
       <div class="controls-row">
         <button class="rewind-btn" id="rewindBtn" title="Retour au début" disabled>⏮</button>
         <button class="play-btn" id="playBtn" disabled>▶</button>
