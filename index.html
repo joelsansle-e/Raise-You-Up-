@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lecteur Multipiste - Raise You Up! (v85)</title>
+  <title>Lecteur Multipiste - Raise You Up! (v86)</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   
@@ -209,7 +209,7 @@
       white-space: nowrap; 
       text-transform: capitalize;
       max-width: 100%;
-      text-align: center;       
+      text-align: center;        
       text-align-last: center;  
     }
     
@@ -324,6 +324,27 @@
     .btn-track.active-mute { background: var(--accent); color: #fff; }
     
     .version-badge { font-size: 0.75rem; background: rgba(146, 94, 98, 0.2); border: 1px solid var(--primary); color: var(--primary); padding: 2px 8px; border-radius: 4px; margin-left: 8px; vertical-align: middle; display: inline-block; font-weight: normal; }
+
+    /* Classe unifiée pour les boutons de la topBar (Déconnexion & Vidéo) */
+    .topbar-action-btn {
+      font-family: 'Inter', sans-serif;
+      background: rgba(146, 94, 98, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      letter-spacing: 1px;
+      transition: background 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+    .topbar-action-btn:hover {
+      background: rgba(166, 114, 118, 0.95);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.5);
+    }
 
     @media (min-width: 768px) {
       body { padding: 20px; }
@@ -707,7 +728,9 @@
       if (!adminBadge) {
         adminBadge = document.createElement("div");
         adminBadge.id = "adminBadge";
-        adminBadge.style.cssText = "flex-grow: 1; font-family: 'Inter', sans-serif; background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px;";
+        adminBadge.className = "topbar-action-btn";
+        adminBadge.style.flexGrow = "1";
+        adminBadge.style.textAlign = "center";
         topBar.appendChild(adminBadge);
       }
 
@@ -722,80 +745,39 @@
       if (!logoutBtn) {
         logoutBtn = document.createElement("button");
         logoutBtn.id = "logoutBtn";
+        logoutBtn.className = "topbar-action-btn";
         logoutBtn.innerText = "🚪 Déconnexion";
-        logoutBtn.style.cssText = "font-family: 'Inter', sans-serif; background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px; transition: background 0.2s, box-shadow 0.2s; white-space: nowrap;";
-        logoutBtn.onmouseover = () => {
-          logoutBtn.style.background = "rgba(166, 114, 118, 0.95)";
-          logoutBtn.style.boxShadow = "0 6px 16px rgba(0,0,0,0.5)";
-        };
-        logoutBtn.onmouseout = () => {
-          logoutBtn.style.background = "rgba(146, 94, 98, 0.85)";
-          logoutBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.4)";
-        };
         logoutBtn.onclick = logoutToSession;
         topBar.appendChild(logoutBtn);
       }
 
       let stopBgBtn = document.getElementById("stopBgBtn");
-    if (!stopBgBtn) {
-      stopBgBtn = document.createElement("button");
-      stopBgBtn.id = "stopBgBtn";
-      stopBgBtn.innerText = "⏸️ Stopper la vidéo";
-      stopBgBtn.style.cssText = "font-family: 'Inter', sans-serif; background: rgba(146, 94, 98, 0.85); border: 1px solid rgba(255, 255, 255, 0.3); color: #ffffff; padding: 10px 16px; border-radius: 8px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.4); letter-spacing: 1px; transition: background 0.2s, box-shadow 0.2s; white-space: nowrap;";
-      stopBgBtn.onmouseover = () => {
-        stopBgBtn.style.background = "rgba(166, 114, 118, 0.95)";
-        stopBgBtn.style.boxShadow = "0 6px 16px rgba(0,0,0,0.5)";
-      };
-      stopBgBtn.onmouseout = () => {
-        stopBgBtn.style.background = "rgba(146, 94, 98, 0.85)";
-        stopBgBtn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.4)";
-      };
-      stopBgBtn.onclick = toggleBackgroundAnimation;
-      
-      // On l'ajoute dans la topBar juste avant le bouton de déconnexion (ou à la suite si logoutBtn n'est pas encore créé)
-      if (logoutBtn) {
-        topBar.insertBefore(stopBgBtn, logoutBtn);
-      } else {
-        topBar.appendChild(stopBgBtn);
+      if (!stopBgBtn) {
+        stopBgBtn = document.createElement("button");
+        stopBgBtn.id = "stopBgBtn";
+        stopBgBtn.className = "topbar-action-btn";
+        stopBgBtn.innerText = "⏸️ Stopper la vidéo";
+        stopBgBtn.onclick = toggleBackgroundAnimation;
+        
+        if (logoutBtn) {
+          topBar.insertBefore(stopBgBtn, logoutBtn);
+        } else {
+          topBar.appendChild(stopBgBtn);
+        }
       }
-    }
       
       console.log(message);
       await loadMembers();
       loadPlaylist();
     }
-/*
-    function logoutToSession() {
-      if (isAdminMode && hasUnsavedChanges) {
-        const confirmLogout = confirm("Vous avez des modifications non enregistrées. Voulez-vous vraiment vous déconnecter sans enregistrer ?");
-        if (!confirmLogout) return;
-      }
 
-      stopAllSources();
-      isPlaying = false;
-      pauseOffset = 0;
-      duration = 0;
-      tracks = [];
-      currentProjectOriginalKey = "";
-      currentProjectInfo = {};
-      hasUnsavedChanges = false;
-      isAdminMode = false;
-      githubToken = "";
-
-      document.getElementById("appConfigInput").value = "";
-      document.getElementById("sysAlert").style.display = "none";
-      document.getElementById("appContent").style.display = "none";
-      document.getElementById("sysContainer").style.display = "flex";
-    }
-*/
     function toggleBackgroundAnimation() {
-      const bgVideo = document.getElementById("bgVideo") || document.querySelector("video");
+      const bgVideo = document.getElementById("bg-video");
       const btn = document.getElementById("stopBgBtn");
     
       if (!bgVideo) return;
     
       if (!bgVideo.paused) {
-        // Création d'une modale personnalisée si elle n'existe pas déjà
         let customModal = document.getElementById("customConfirmModal");
         if (!customModal) {
           customModal = document.createElement("div");
@@ -812,8 +794,7 @@
             </div>
           `;
           document.body.appendChild(customModal);
-    
-          // Gestion des clics sur les boutons de la modale
+
           document.getElementById("modalYesBtn").onclick = () => {
             bgVideo.pause();
             if (btn) btn.innerText = "▶️ Relancer la vidéo";
@@ -847,26 +828,21 @@
       isAdminMode = false;
       githubToken = "";
 
-      // Nettoyage complet de l'interface et réinitialisation des sélecteurs
       document.getElementById("appConfigInput").value = "";
       document.getElementById("sysAlert").style.display = "none";
       
-      // Réinitialisation du menu déroulant des projets
       const projectSelect = document.getElementById("projectSelect");
       if (projectSelect) projectSelect.innerHTML = '<option value="">-- Choisir un morceau --</option>';
 
-      // Masquage de la zone de notes et suppression propre du bouton admin s'il existe
       const notesContainer = document.getElementById("notesContainer");
       if (notesContainer) notesContainer.style.display = "none";
       
       const saveBtn = document.getElementById('saveAdminBtn');
       if (saveBtn) saveBtn.remove();
 
-      // Vidage de la liste des pistes audio affichées
       const tracksList = document.getElementById("tracksList");
       if (tracksList) tracksList.innerHTML = "";
 
-      // Suppression de la barre supérieure admin si présente pour éviter les doublons à la prochaine connexion
       const topBar = document.getElementById("adminTopBar");
       if (topBar) topBar.remove();
 
@@ -1202,7 +1178,6 @@
       updatePitchSelectOptions();
       hasUnsavedChanges = false;
 
-     // Gestion de l'affichage des notes (Visiteur vs Admin avec double cadre)
       const notesContainer = document.getElementById("notesContainer");
       const displayContent = document.getElementById("notesDisplayContent");
       const notesInput = document.getElementById("notesInput");
@@ -1219,7 +1194,6 @@
             notesInput.style.width = "100%";
             notesInput.style.minHeight = "60px";
             notesInput.style.resize = "vertical";
-            // Restauration du style "double encadré" spécifique à l'admin
             notesInput.style.background = "rgba(255,255,255,0.08)";
             notesInput.style.border = "1px solid rgba(255,255,255,0.2)";
             notesInput.style.borderRadius = "6px";
@@ -1245,13 +1219,11 @@
             saveBtn.style.display = 'block';
           }
         } else {
-          // Mode Visiteur : pas de double cadre, simple affichage propre
           if (notesInput) notesInput.style.display = "none";
           if (displayContent) {
             displayContent.style.display = "block";
             displayContent.textContent = currentProjectInfo.Notes || '';
           }
-          // Le bouton d'enregistrement est masqué pour le visiteur
           if (saveBtn) saveBtn.style.display = 'none';
         }
       } else {
@@ -1420,7 +1392,6 @@
       const oldVal = selectElement.dataset.prevValue;
       
       const selects = document.querySelectorAll('.role-select');
-
       let targetSelect = null;
       selects.forEach(s => {
         if (s !== selectElement && s.dataset.prevValue === newVal) {
